@@ -6,7 +6,7 @@
 'use strict';
 
 /* ═══ CONFIG WORKER ═══ */
-var WORKER_URL = 'https://taxi-downtown.yassinetrepaud6.workers.dev/';
+var WORKER_URL = 'https://taxi-downtown.yassinetrepaud6.workers.dev/';"
 var WORKER_CONFIGURED = !!(WORKER_URL && WORKER_URL.indexOf('https://') === 0 && WORKER_URL.indexOf('TON-PSEUDO') === -1);
 
 /* ═══ CODE ADMIN OBFUSQUÉ (XOR 0x1F sur "DOWNTOWN26") ═══ */
@@ -62,9 +62,15 @@ var STATE = LS.get('td-state', null) || {
   employees: [],
   vehicles: [],
   assignments: {
+    'CW6683ZV': 'Bob Musar',
+    'CJ8249YD': 'Noah Dupont',
+    'BX5408WL': 'Arthur Bendal',
+    'FD3839EL': 'Maxime Rivière',
+    'BP5989FB': 'Sacha Mermoud',
+    'LX4255HP': 'Sofian Badhaoui',
+    'WN5307RY': 'Jimy Smith',
     'JZ0498AE': 'Sam Le Gros',
-    'DC3624SY': 'Romeo Cali',
-    'WN5307RY': 'Jimy Smith'
+    'DC3624SY': 'Romeo Cali'
   },
   history: [],
   baseOverrides: {},
@@ -266,14 +272,15 @@ var BASE_EMPLOYEES = [
   { id:'base-1', name:'Jimy Smith', role:'Directeur', hiredAt: Date.now() - 30*86400000 },
   { id:'base-2', name:'Sam Le Gros', role:'Directeur Adjoint', hiredAt: Date.now() - 30*86400000 },
   { id:'base-3', name:'Romeo Cali', role:'Responsable CM', hiredAt: Date.now() - 30*86400000 },
-  { id:'base-4', name:'Bob Musar', role:'Novice', hiredAt: Date.now() - 15*86400000 },
+  { id:'base-4', name:'Bob Musar', role:'Chauffeur Senior', hiredAt: Date.now() - 15*86400000 },
   { id:'base-5', name:'Noah Dupont', role:'Novice', hiredAt: Date.now() - 15*86400000 },
   { id:'base-6', name:'Luca Safi', role:'Chauffeur Confirmé', hiredAt: Date.now() - 20*86400000 },
   { id:'base-7', name:'Maxime Rivière', role:'Novice', hiredAt: Date.now() - 10*86400000 },
   { id:'base-8', name:'Sofia Fernandez', role:'Chauffeur Senior', hiredAt: Date.now() - 25*86400000 },
   { id:'base-9', name:'Arthur Bendal', role:'Novice', hiredAt: Date.now() - 8*86400000 },
   { id:'base-10', name:'Sacha Mermoud', role:'Novice', hiredAt: Date.now() - 5*86400000 },
-  { id:'base-11', name:'Theo Roberto', role:'Novice', hiredAt: Date.now() - 5*86400000 }
+  { id:'base-11', name:'Theo Roberto', role:'Novice', hiredAt: Date.now() - 5*86400000 },
+  { id:'base-12', name:'Sofian Badhaoui', role:'Novice', hiredAt: Date.now() - 3*86400000 }
 ];
 
 /* ═══ FLOTTE DE BASE ═══ */
