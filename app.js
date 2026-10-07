@@ -203,8 +203,17 @@ var SYNC = {
 /* ═══ SAVE avec debounce ═══ */
 var _saveDebounce = null;
 function saveState(){
+  // Auto-backup : sauvegarde l'état AVANT la modif en cours
+  if (!_skipBackupOnce){
+    var lastLabel = (STATE.history[0] && STATE.history[0].action) || 'Modification';
+    createBackup(lastLabel);
+  } else {
+    _skipBackupOnce = false;
+  }
+
   STATE.updatedAt = Date.now();
   LS.set('td-state', STATE);
+
   if (_saveDebounce) clearTimeout(_saveDebounce);
   _saveDebounce = setTimeout(function(){
     if (!WORKER_CONFIGURED) return;
@@ -794,17 +803,48 @@ function buildPanelHistorique(){
 function buildPanelParametres(){
   var raw = JSON.stringify(STATE);
   var sizeKB = (raw.length / 1024).toFixed(1);
+  var backups = getBackups();
+
+  var backupListHTML = backups.length
+    ? backups.map(function(b){
+        var counts = '📄 ' + (b.snapshot.invoices || []).length +
+                     ' · 👥 ' + (b.snapshot.employees || []).length +
+                     ' · 🚗 ' + (b.snapshot.vehicles || []).length;
+        return '<div class="item">' +
+          '<div class="item__av">📦</div>' +
+          '<div class="item__body"><b>' + esc(b.label) + '</b>' +
+            '<small>' + fmtDate(b.ts) + ' · ' + counts + '</small></div>' +
+          '<div class="item__btns">' +
+            '<button type="button" class="item__btn item__btn--ok" data-restore="' + esc(b.id) + '">Restaurer</button>' +
+            '<button type="button" class="item__btn" data-download-backup="' + esc(b.id) + '">Télécharger</button>' +
+            '<button type="button" class="item__btn item__btn--danger" data-del-backup="' + esc(b.id) + '">✕</button>' +
+          '</div></div>';
+      }).join('')
+    : '<div class="empty">Aucune sauvegarde pour le moment. Chaque action en créera automatiquement une.</div>';
+
   return '<div class="sec">Statistiques</div>' +
     '<div class="stats">' +
       '<div class="stat"><small>Factures</small><b>' + STATE.invoices.length + '</b></div>' +
       '<div class="stat"><small>Employés</small><b>' + getActiveEmployees().length + '</b></div>' +
       '<div class="stat"><small>Véhicules</small><b>' + getFleet().length + '</b></div>' +
       '<div class="stat"><small>Attributions</small><b>' + Object.keys(STATE.assignments).length + '</b></div></div>' +
-    '<div class="sec">Sauvegarde</div>' +
+
+    '<div class="sec">💾 Sauvegardes automatiques <small>' + backups.length + ' / ' + MAX_BACKUPS + '</small></div>' +
+    '<p style="color:var(--ink-2);font-size:13px;margin-bottom:12px;line-height:1.6">' +
+      'Une sauvegarde est créée <b>automatiquement avant chaque modification</b> (ajout, suppression, changement). ' +
+      'Les ' + MAX_BACKUPS + ' dernières sont conservées.</p>' +
+    '<div class="tools" style="margin-bottom:10px">' +
+      '<button type="button" data-action="backup-now">📸 Sauvegarder maintenant</button>' +
+      (backups.length ? '<button type="button" class="danger" data-action="clear-backups">🗑️ Vider toutes les sauvegardes</button>' : '') +
+    '</div>' +
+    '<div class="list">' + backupListHTML + '</div>' +
+
+    '<div class="sec">Export / Import manuel</div>' +
     '<div class="tools">' +
       '<button type="button" data-action="export-json">Export JSON</button>' +
       '<button type="button" data-action="export-csv">Export CSV</button>' +
       '<button type="button" data-action="import">Import</button></div>' +
+
     '<div class="sec">Zone dangereuse</div>' +
     '<p style="color:var(--ink-2);font-size:13px;margin-bottom:12px">Ces actions sont irréversibles.</p>' +
     '<div class="tools">' +
@@ -812,8 +852,10 @@ function buildPanelParametres(){
       '<button type="button" class="danger" data-action="clear-employees">Vider employés</button>' +
       '<button type="button" class="danger" data-action="clear-vehicles">Vider véhicules</button>' +
       '<button type="button" class="danger" data-action="clear-all">Tout effacer</button></div>' +
+
     '<div class="sec">Stockage</div>' +
-    '<p style="color:var(--ink-3);font-family:var(--f-mono);font-size:11px;letter-spacing:.14em">' + sizeKB + ' Ko utilisés</p>';
+    '<p style="color:var(--ink-3);font-family:var(--f-mono);font-size:11px;letter-spacing:.14em">' +
+      sizeKB + ' Ko · ' + backups.length + ' sauvegarde(s)</p>';
 }
 
 /* ─── ÉVÉNEMENTS ADMIN ─── */
@@ -975,9 +1017,73 @@ function bindPanelEvents(tab){
       else if (act === 'clear-assignments') clearAssignments();
       else if (act === 'clear-history') clearHistory();
       else if (act === 'clear-all') clearAll();
+      else if (act === 'backup-now') manualBackup();
+      else if (act === 'clear-backups') clearBackupsPrompt();
     });
   });
-}
+
+  // Restaurer une sauvegarde
+  $$('[data-restore]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var id = btn.dataset.restore;
+      var b = getBackups().filter(function(x){ return x.id === id; })[0];
+      if (!b) return;
+      showConfirm(
+        'Restaurer cette sauvegarde ?',
+        'État du ' + fmtDate(b.ts) + ' (' + b.label + '). Les données actuelles seront remplacées.',
+        { danger: true, okLabel: 'Restaurer' }
+      ).then(function(ok){
+        if (!ok) return;
+        if (restoreBackup(id)){
+          toast('ok', 'Sauvegarde restaurée', b.label);
+          renderAdminContent('parametres');
+          renderAllPublic();
+        } else {
+          toast('err', 'Erreur', 'Sauvegarde introuvable.');
+        }
+      });
+    });
+  });
+
+  // Télécharger une sauvegarde
+  $$('[data-download-backup]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var id = btn.dataset.downloadBackup;
+      var b = getBackups().filter(function(x){ return x.id === id; })[0];
+      if (!b) return;
+      var data = {
+        label: b.label,
+        ts: b.ts,
+        date: new Date(b.ts).toISOString(),
+        invoices: b.snapshot.invoices || [],
+        employees: b.snapshot.employees || [],
+        vehicles: b.snapshot.vehicles || [],
+        assignments: b.snapshot.assignments || {},
+        history: b.snapshot.history || [],
+        baseOverrides: b.snapshot.baseOverrides || {}
+      };
+      var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'backup-' + new Date(b.ts).toISOString().slice(0, 19).replace(/[:T]/g, '-') + '.json';
+      a.click();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); }, 500);
+      toast('ok', 'Sauvegarde téléchargée', b.label);
+    });
+  });
+
+  // Supprimer une sauvegarde
+  $$('[data-del-backup]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var id = btn.dataset.delBackup;
+      showConfirm('Supprimer cette sauvegarde ?', '', { danger: true }).then(function(ok){
+        if (!ok) return;
+        deleteBackup(id);
+        toast('ok', 'Sauvegarde supprimée');
+        renderAdminContent('parametres');
+      });
+    });
+  });
 
 /* ═══ MODALES SPÉCIALES ═══ */
 function openFireModal(emp){
@@ -1081,6 +1187,30 @@ function openSanctionModal(emp){
 }
 
 /* ═══ ACTIONS GLOBALES ═══ */
+function manualBackup(){
+  var backups = getBackups();
+  var snapshot = captureSnapshot();
+  backups.unshift({
+    id: 'bak-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+    ts: Date.now(),
+    label: '📸 Sauvegarde manuelle',
+    snapshot: snapshot
+  });
+  backups = backups.slice(0, MAX_BACKUPS);
+  setBackups(backups);
+  _previousSnapshot = snapshot;
+  toast('ok', 'Sauvegarde créée', 'État actuel enregistré.');
+  renderAdminContent('parametres');
+}
+
+function clearBackupsPrompt(){
+  showConfirm('Vider toutes les sauvegardes ?', 'Toutes les ' + getBackups().length + ' sauvegardes seront supprimées.', { danger: true, okLabel: 'Vider' }).then(function(ok){
+    if (!ok) return;
+    clearAllBackups();
+    toast('ok', 'Sauvegardes vidées');
+    renderAdminContent('parametres');
+  });
+}
 function exportJSON(){
   var data = {
     invoices: STATE.invoices, employees: STATE.employees, vehicles: STATE.vehicles,
@@ -1458,7 +1588,8 @@ function init(){
     $$('[data-year]').forEach(function(el){ el.textContent = new Date().getFullYear(); });
 
     migrateOldStorage();
-    applyBaseOverrides();
+   applyBaseOverrides();
+   _previousSnapshot = captureSnapshot();
 
     setupTheme();
     setupMenu();
