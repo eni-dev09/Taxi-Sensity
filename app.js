@@ -1509,6 +1509,192 @@ function migrateOldStorage(){
   }
 }
 
+/* ═══ AMÉLIORATIONS v2.2 ═══ */
+
+function setupScrollProgress(){
+  var bar = document.getElementById('scrollProgress');
+  if (!bar) return;
+  var inner = bar.querySelector('i');
+  if (!inner) return;
+  var ticking = false;
+  function update(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var pct = h > 0 ? (window.scrollY / h) * 100 : 0;
+    inner.style.width = Math.max(0, Math.min(100, pct)) + '%';
+    ticking = false;
+  }
+  window.addEventListener('scroll', function(){
+    if (!ticking){ requestAnimationFrame(update); ticking = true; }
+  }, { passive: true });
+  update();
+}
+
+function setupHornysCalc(){
+  var numEl = document.getElementById('calcNum');
+  if (!numEl) return;
+  var totalEl = document.getElementById('calcTotal');
+  var commEl = document.getElementById('calcCommission');
+  var qty = 5;
+  function render(){
+    numEl.textContent = qty;
+    if (totalEl) totalEl.textContent = (qty * 200).toLocaleString('fr-FR') + ' $';
+    if (commEl) commEl.textContent = (qty * 80).toLocaleString('fr-FR') + ' $';
+  }
+  var btns = document.querySelectorAll('[data-calc]');
+  for (var i = 0; i < btns.length; i++){
+    (function(btn){
+      btn.addEventListener('click', function(){
+        if (btn.getAttribute('data-calc') === '+') qty = Math.min(50, qty + 1);
+        else qty = Math.max(1, qty - 1);
+        render();
+      });
+    })(btns[i]);
+  }
+  render();
+}
+
+function setupServiceChecklist(){
+  var wrap = document.getElementById('serviceChecklist');
+  if (!wrap) return;
+  var KEY = 'td-service-checklist';
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch(e){ saved = {}; }
+  var items = wrap.querySelectorAll('.checklist__item');
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch(e){} }
+  function render(){
+    for (var i = 0; i < items.length; i++){
+      var k = items[i].getAttribute('data-check');
+      if (saved[k]) items[i].classList.add('done');
+      else items[i].classList.remove('done');
+    }
+  }
+  for (var i = 0; i < items.length; i++){
+    (function(item){
+      item.addEventListener('click', function(){
+        var k = item.getAttribute('data-check');
+        saved[k] = !saved[k];
+        save();
+        render();
+      });
+    })(items[i]);
+  }
+  var reset = document.getElementById('checklistReset');
+  if (reset) reset.addEventListener('click', function(){
+    saved = {};
+    save();
+    render();
+  });
+  render();
+}
+
+function setupCountdown(){
+  var d = document.getElementById('cdDays');
+  if (!d) return;
+  var h = document.getElementById('cdHours');
+  var m = document.getElementById('cdMins');
+  var s = document.getElementById('cdSecs');
+  function tick(){
+    var now = new Date();
+    var target = new Date(now);
+    target.setDate(now.getDate() + (7 - now.getDay()) % 7);
+    target.setHours(23, 59, 59, 999);
+    if (target <= now) target.setDate(target.getDate() + 7);
+    var diff = Math.max(0, target - now);
+    d.textContent = String(Math.floor(diff / 86400000)).padStart(2, '0');
+    h.textContent = String(Math.floor((diff % 86400000) / 3600000)).padStart(2, '0');
+    m.textContent = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+    s.textContent = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+
+function setupVehicleModal(){
+  var grid = document.getElementById('fleetGrid');
+  if (!grid) return;
+  grid.addEventListener('click', function(e){
+    var card = e.target.closest ? e.target.closest('.vcard') : null;
+    if (!card) return;
+    var plate = card.querySelector('.vcard-plate');
+    if (!plate) return;
+    openVehicleModal(plate.textContent.trim());
+  });
+}
+
+function openVehicleModal(plate){
+  var v = findVehicleByPlate(plate);
+  if (!v) return;
+  var driver = getEmployeeForVehicle(plate);
+  var driverHTML = driver
+    ? '<div class="vmodal__driver"><div class="av">' + esc(initials(driver)) + '</div><div><small>Chauffeur attitré</small><b>' + esc(driver) + '</b></div></div>'
+    : '<div class="vmodal__driver unassigned"><div class="av">—</div><div><small>Chauffeur</small><b>Non attribué</b></div></div>';
+  var root = document.getElementById('modalRoot');
+  if (!root) return;
+  var el = document.createElement('div');
+  el.className = 'vmodal';
+  el.innerHTML = '<div class="vmodal__c">' +
+    '<button class="vmodal__close" type="button">✕</button>' +
+    '<div class="vmodal__media">' + TAXI_SVG + '</div>' +
+    '<div class="vmodal__cat">' + esc(CATS[v.cat] || v.cat) + '</div>' +
+    '<h3 class="vmodal__name">' + esc(v.model) + '</h3>' +
+    '<div class="vmodal__plate">' + esc(v.plate) + '</div>' +
+    '<dl class="vmodal__rows">' +
+      '<div class="vmodal__row"><dt>Référence</dt><dd>' + esc(v.ref) + '</dd></div>' +
+      '<div class="vmodal__row"><dt>Catégorie</dt><dd>' + esc(CATS[v.cat] || v.cat) + '</dd></div>' +
+      '<div class="vmodal__row"><dt>Stand</dt><dd>Tangerine Street</dd></div>' +
+    '</dl>' + driverHTML + '</div>';
+  root.appendChild(el);
+  function close(){ if (el.parentNode) el.parentNode.removeChild(el); }
+  el.querySelector('.vmodal__close').addEventListener('click', close);
+  el.addEventListener('click', function(e){ if (e.target === el) close(); });
+}
+
+function setupKeyboardShortcuts(){
+  var SHORTCUTS = { '1': 'hero', '2': 'primes', '3': 'hornys', '4': 'infos', '5': 'fleet', '6': 'team' };
+  document.addEventListener('keydown', function(e){
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === '?'){
+      e.preventDefault();
+      showKeyboardHelp();
+      return;
+    }
+    if (SHORTCUTS[e.key]){
+      var el = document.getElementById(SHORTCUTS[e.key]);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+}
+
+function showKeyboardHelp(){
+  if (document.querySelector('.kbd-help')) return;
+  var el = document.createElement('div');
+  el.className = 'kbd-help';
+  el.innerHTML = '<div class="kbd-help__c"><h3>Raccourcis clavier</h3><ul>' +
+    '<li><span>Accueil</span><kbd>1</kbd></li>' +
+    '<li><span>Primes</span><kbd>2</kbd></li>' +
+    '<li><span>Horny\'s & Tarifs</span><kbd>3</kbd></li>' +
+    '<li><span>Infos service</span><kbd>4</kbd></li>' +
+    '<li><span>Flotte</span><kbd>5</kbd></li>' +
+    '<li><span>Équipe</span><kbd>6</kbd></li>' +
+    '<li><span>Aide</span><kbd>?</kbd></li>' +
+    '<li><span>Fermer</span><kbd>Échap</kbd></li>' +
+    '</ul></div>';
+  document.body.appendChild(el);
+  function close(){ if (el.parentNode) el.parentNode.removeChild(el); }
+  el.addEventListener('click', function(e){ if (e.target === el) close(); });
+  document.addEventListener('keydown', function escFn(e){
+    if (e.key === 'Escape'){ close(); document.removeEventListener('keydown', escFn); }
+  });
+}
+
+function setupInstallPrompt(){
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();
+    // prompt basique — pas de UI complexe pour éviter bugs
+  });
+}
+
 /* ═══ INIT ═══ */
 function init(){
   try {
