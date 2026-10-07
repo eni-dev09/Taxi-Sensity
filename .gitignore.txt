@@ -1,0 +1,23 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node (si on ajoute un build plus tard)
+node_modules/
+package-lock.json
+npm-debug.log
+
+# Env
+.env
+.env.local
+*.local
+
+# Cloudflare
+.wrangler/
