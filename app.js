@@ -859,191 +859,30 @@ function buildPanelParametres(){
 }
 
 /* ─── ÉVÉNEMENTS ADMIN ─── */
-function bindPanelEvents(tab){
-  var form = $('#addInvoiceForm');
-  if (form) form.addEventListener('submit', function(e){
-    e.preventDefault();
-    var driver = $('#invDriver').value.trim();
-    var count = Math.max(1, parseInt($('#invCount').value, 10) || 1);
-    var amount = Math.max(0, parseInt($('#invAmount').value, 10) || 0);
-    if (!driver || !amount) return;
-    if (amount > 1000000){ toast('err', 'Montant trop élevé', 'Max 1 000 000 $.'); return; }
-    STATE.invoices.push({ driver: driver, count: count, amount: amount, date: Date.now() });
-    logAction('Facture · ' + driver + ' (' + count + '×' + amount + '$)');
-    saveState();
-    toast('ok', 'Facture ajoutée', driver + ' · ' + fmt(amount));
-    renderAdminContent('factures');
-    renderAllPublic();
+function manualBackup(){
+  var backups = getBackups();
+  var snapshot = captureSnapshot();
+  backups.unshift({
+    id: 'bak-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+    ts: Date.now(),
+    label: '📸 Sauvegarde manuelle',
+    snapshot: snapshot
   });
+  backups = backups.slice(0, MAX_BACKUPS);
+  setBackups(backups);
+  _previousSnapshot = snapshot;
+  toast('ok', 'Sauvegarde créée', 'État actuel enregistré.');
+  renderAdminContent('parametres');
+}
 
-  var invSearch = $('#invSearch');
-  if (invSearch) invSearch.addEventListener('input', function(){
-    var q = invSearch.value.trim().toLowerCase();
-    $$('#invList .item').forEach(function(el){
-      var name = (el.querySelector('b') || {}).textContent || '';
-      el.style.display = !q || name.toLowerCase().indexOf(q) !== -1 ? '' : 'none';
-    });
+function clearBackupsPrompt(){
+  showConfirm('Vider toutes les sauvegardes ?', 'Toutes les sauvegardes seront supprimées.', { danger: true, okLabel: 'Vider' }).then(function(ok){
+    if (!ok) return;
+    clearAllBackups();
+    toast('ok', 'Sauvegardes vidées');
+    renderAdminContent('parametres');
   });
-
-  $$('[data-del-invoice]').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      var idx = parseInt(btn.dataset.delInvoice, 10);
-      showConfirm('Supprimer cette facture ?', 'Action définitive.', { danger: true }).then(function(ok){
-        if (!ok) return;
-        var inv = STATE.invoices.splice(idx, 1)[0];
-        logAction('Facture supprimée · ' + (inv ? inv.driver : '?'));
-        saveState();
-        toast('ok', 'Facture supprimée');
-        renderAdminContent('factures');
-        renderAllPublic();
-      });
-    });
-  });
-
-  var vf = $('#addVehicleForm');
-  if (vf) vf.addEventListener('submit', function(e){
-    e.preventDefault();
-    var model = $('#vehModel').value.trim();
-    var plate = $('#vehPlate').value.trim().toUpperCase();
-    if (!model || !plate) return;
-    if (!isValidPlate(plate)){ toast('err', 'Plaque invalide', '4 à 8 caractères A-Z et 0-9.'); return; }
-    if (getFleet().some(function(v){ return v.plate === plate; })){ toast('warn', 'Plaque existante'); return; }
-    var id = 'veh-' + Date.now();
-    var ref = 'TD-' + String(getFleet().length + 1).padStart(3, '0');
-    STATE.vehicles.push({ id: id, model: model, plate: plate, ref: ref });
-    logAction('Véhicule ajouté · ' + model + ' (' + plate + ')');
-    saveState();
-    toast('ok', 'Véhicule ajouté', model + ' · ' + plate);
-    renderAdminContent('vehicules');
-    renderAllPublic();
-  });
-
-  $$('[data-del-vehicle]').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      var id = btn.dataset.delVehicle;
-      showConfirm('Supprimer ce véhicule ?', 'Action définitive.', { danger: true }).then(function(ok){
-        if (!ok) return;
-        var v = STATE.vehicles.filter(function(x){ return x.id === id; })[0];
-        if (!v) return;
-        if (STATE.assignments[v.plate]) delete STATE.assignments[v.plate];
-        STATE.vehicles = STATE.vehicles.filter(function(x){ return x.id !== id; });
-        logAction('Véhicule supprimé · ' + v.plate);
-        saveState();
-        toast('ok', 'Véhicule supprimé');
-        renderAdminContent('vehicules');
-        renderAllPublic();
-      });
-    });
-  });
-
-  var ef = $('#addEmployeeForm');
-  if (ef) ef.addEventListener('submit', function(e){
-    e.preventDefault();
-    var name = $('#empName').value.trim();
-    var role = $('#empRole').value;
-    if (!name) return;
-    if (name.length < 2 || name.length > 60){ toast('err', 'Nom invalide', 'Entre 2 et 60 caractères.'); return; }
-    if (getAllEmployees().some(function(emp){ return emp.name.toLowerCase() === name.toLowerCase() && !emp.firedAt; })){
-      toast('warn', 'Déjà employé', 'Ce nom est déjà utilisé.'); return;
-    }
-    addEmployee(name, role);
-    logAction('Employé ajouté · ' + name + ' (' + role + ')');
-    saveState();
-    toast('ok', 'Employé ajouté', name + ' · ' + role);
-    renderAdminContent('employes');
-    renderAllPublic();
-  });
-
-  $$('[data-act]').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      var act = btn.dataset.act;
-      var id = btn.dataset.id;
-      var emp = findEmployeeById(id);
-      if (!emp) return;
-      if (act === 'fire') openFireModal(emp);
-      else if (act === 'rehire'){
-        rehireEmployee(id);
-        logAction('Réembauche · ' + emp.name);
-        saveState();
-        toast('ok', 'Réembauché', emp.name);
-        renderAdminContent('employes');
-        renderAllPublic();
-      }
-      else if (act === 'change-role') openChangeRoleModal(emp);
-      else if (act === 'sanction') openSanctionModal(emp);
-    });
-  });
-
-  var af = $('#assignForm');
-  if (af) af.addEventListener('submit', function(e){
-    e.preventDefault();
-    var driver = $('#assignDriver').value;
-    var plate = $('#assignVehicle').value;
-    if (!driver || !plate) return;
-    assignVehicle(plate, driver);
-    logAction('Attribution · ' + driver + ' → ' + plate);
-    saveState();
-    toast('ok', 'Attribution créée', driver + ' → ' + plate);
-    renderAdminContent('attributions');
-    renderAllPublic();
-  });
-
-  $$('[data-unassign]').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      var plate = btn.dataset.unassign;
-      var driver = STATE.assignments[plate];
-      showConfirm('Retirer cette attribution ?', driver + ' sera détaché du véhicule ' + plate, { danger: false }).then(function(ok){
-        if (!ok) return;
-        unassignVehicle(plate);
-        logAction('Attribution retirée · ' + plate);
-        saveState();
-        toast('ok', 'Attribution retirée');
-        renderAdminContent('attributions');
-        renderAllPublic();
-      });
-    });
-  });
-
-  $$('[data-action]').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      var act = btn.dataset.action;
-      if (act === 'export-json') exportJSON();
-      else if (act === 'export-csv') exportCSV();
-      else if (act === 'print') printInvoices();
-      else if (act === 'import') $('#adminFileInput').click();
-      else if (act === 'clear-invoices') clearInvoices();
-      else if (act === 'clear-employees') clearEmployees();
-      else if (act === 'clear-vehicles') clearVehicles();
-      else if (act === 'clear-assignments') clearAssignments();
-      else if (act === 'clear-history') clearHistory();
-      else if (act === 'clear-all') clearAll();
-      else if (act === 'backup-now') manualBackup();
-      else if (act === 'clear-backups') clearBackupsPrompt();
-    });
-  });
-
-  // Restaurer une sauvegarde
-  $$('[data-restore]').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      var id = btn.dataset.restore;
-      var b = getBackups().filter(function(x){ return x.id === id; })[0];
-      if (!b) return;
-      showConfirm(
-        'Restaurer cette sauvegarde ?',
-        'État du ' + fmtDate(b.ts) + ' (' + b.label + '). Les données actuelles seront remplacées.',
-        { danger: true, okLabel: 'Restaurer' }
-      ).then(function(ok){
-        if (!ok) return;
-        if (restoreBackup(id)){
-          toast('ok', 'Sauvegarde restaurée', b.label);
-          renderAdminContent('parametres');
-          renderAllPublic();
-        } else {
-          toast('err', 'Erreur', 'Sauvegarde introuvable.');
-        }
-      });
-    });
-  });
+}
 
   // Télécharger une sauvegarde
   $$('[data-download-backup]').forEach(function(btn){
