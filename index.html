@@ -11,7 +11,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800&family=Permanent+Marker&display=swap">
 <link rel="stylesheet" href="style.css">
-
 <script>
 setTimeout(function(){
   var l = document.getElementById('loader');
@@ -24,6 +23,8 @@ setTimeout(function(){
 </script>
 </head>
 <body class="is-loading">
+
+<div class="scroll-progress" id="scrollProgress"><i></i></div>
 
 <div class="loader" id="loader">
   <img src="https://files.catbox.moe/nl7txj.png" alt="" onerror="this.style.display='none'">
@@ -122,11 +123,23 @@ setTimeout(function(){
       <p class="eyebrow"><i></i>Récompenses hebdomadaires</p>
       <h2 class="display" style="font-size:clamp(44px,7vw,96px);margin:22px 0">Les <b>primes.</b></h2>
     </div>
-    <div class="primes">
+
+    <div class="countdown">
+      <h4>⏱ Prochaine distribution des primes</h4>
+      <div class="countdown__timer">
+        <div class="countdown__cell"><b id="cdDays">--</b><span>Jours</span></div>
+        <div class="countdown__cell"><b id="cdHours">--</b><span>Heures</span></div>
+        <div class="countdown__cell"><b id="cdMins">--</b><span>Min</span></div>
+        <div class="countdown__cell"><b id="cdSecs">--</b><span>Sec</span></div>
+      </div>
+    </div>
+
+    <div class="primes" style="margin-top:24px">
       <div class="primes__card first"><div class="primes__rank">1ʳᵉ Place</div><div class="primes__amount">20 000 $</div><div class="primes__label">Le plus investi</div></div>
       <div class="primes__card"><div class="primes__rank">2ᵉ Place</div><div class="primes__amount">15 000 $</div><div class="primes__label">Régularité</div></div>
       <div class="primes__card"><div class="primes__rank">3ᵉ Place</div><div class="primes__amount">10 000 $</div><div class="primes__label">Activité</div></div>
     </div>
+
     <div class="info-panel">
       <h4>Règle du jeu</h4>
       <ul>
@@ -148,7 +161,6 @@ setTimeout(function(){
       <p style="color:var(--ink-2);font-size:15px;line-height:1.75;max-width:640px">Revente de menus à bord de nos taxis et grille officielle des courses.</p>
     </div>
 
-    <!-- Bloc Horny's -->
     <div class="hornys-grid">
       <div class="hornys-main">
         <h3>Revente Horny's</h3>
@@ -169,10 +181,30 @@ setTimeout(function(){
       </aside>
     </div>
 
-    <!-- Séparateur -->
+    <div class="calc">
+      <h4>💰 Calculateur de gains</h4>
+      <div class="calc__row">
+        <label>Menus vendus</label>
+        <div class="calc__btns">
+          <button class="calc__btn" data-calc="-" type="button">−</button>
+          <span class="calc__num" id="calcNum">5</span>
+          <button class="calc__btn" data-calc="+" type="button">+</button>
+        </div>
+      </div>
+      <div class="calc__results">
+        <div class="calc__result">
+          <small>Prix de vente</small>
+          <b id="calcTotal">1 000 $</b>
+        </div>
+        <div class="calc__result highlight">
+          <small>Ta prime directe</small>
+          <b id="calcCommission">400 $</b>
+        </div>
+      </div>
+    </div>
+
     <div class="team__label" style="margin-top:70px">— Grille tarifaire officielle</div>
 
-    <!-- Bloc Tarifs -->
     <div class="tarif-grid">
       <table class="tarif-table">
         <thead><tr><th>Zone</th><th>Tarif</th></tr></thead>
@@ -198,30 +230,40 @@ setTimeout(function(){
     <div style="margin-bottom:52px;max-width:820px">
       <p class="eyebrow"><i></i>Avant de prendre le service</p>
       <h2 class="display" style="font-size:clamp(44px,7vw,96px);margin:22px 0">Infos en <b>service.</b></h2>
-      <p style="color:var(--ink-2);font-size:15px;line-height:1.75;max-width:640px">Checklist rapide à suivre avant chaque prise de service. Respecte ces étapes pour être opérationnel.</p>
+      <p style="color:var(--ink-2);font-size:15px;line-height:1.75;max-width:640px">Checklist rapide à suivre avant chaque prise de service. Clique sur chaque étape pour la valider.</p>
     </div>
-    <div class="contact-grid">
-      <div class="ccard">
-        <small>Étape 01 · Radio</small>
-        <b>17 Hz</b>
-        <p>Connecte-toi sur la fréquence radio <b>17 Hz</b> avant de partir en course.</p>
+
+    <div class="checklist" id="serviceChecklist">
+      <div class="checklist__item" data-check="radio">
+        <span class="checklist__box"></span>
+        <div class="checklist__text">
+          <b>📻 Radio 17 Hz</b>
+          <small>Se connecter avant de partir</small>
+        </div>
       </div>
-      <div class="ccard">
-        <small>Étape 02 · Tenue</small>
-        <b>Uniforme</b>
-        <p>Mets ta <b>tenue de service</b> complète et vérifie l'état de ton taxi.</p>
+      <div class="checklist__item" data-check="tenue">
+        <span class="checklist__box"></span>
+        <div class="checklist__text">
+          <b>👔 Tenue de service</b>
+          <small>Uniforme complet + taxi vérifié</small>
+        </div>
       </div>
-      <div class="ccard">
-        <small>Étape 03 · Stock</small>
-        <b>5 Menus</b>
-        <p>Prends <b>5 menus chez Horny's</b> avant de commencer ton service.</p>
+      <div class="checklist__item" data-check="stock">
+        <span class="checklist__box"></span>
+        <div class="checklist__text">
+          <b>🍔 5 menus Horny's</b>
+          <small>Stock avant la première course</small>
+        </div>
       </div>
-      <div class="ccard">
-        <small>Étape 04 · Discord</small>
-        <b>Connexion</b>
-        <p>Signale ta prise de service sur le <a href="https://discord.gg/be8CdjzPna" target="_blank" rel="noopener noreferrer">Discord officiel →</a></p>
+      <div class="checklist__item" data-check="discord">
+        <span class="checklist__box"></span>
+        <div class="checklist__text">
+          <b>💬 Discord</b>
+          <small>Signaler la prise de service</small>
+        </div>
       </div>
     </div>
+    <button type="button" class="checklist__reset" id="checklistReset">↺ Réinitialiser la checklist</button>
   </div>
 </section>
 
@@ -273,7 +315,10 @@ setTimeout(function(){
       <li><a href="#infos" data-scroll="infos">Contact</a></li>
     </ul></div>
   </div>
-  <div class="footer__bottom"><span>© <span data-year></span> Taxi Downtown · Sensity RP</span></div>
+  <div class="footer__bottom">
+    <span>© <span data-year></span> Taxi Downtown · Sensity RP</span>
+    <span>Appuie sur <kbd style="padding:2px 6px;background:var(--bg-0);border:1px solid var(--line-3);border-radius:3px;font-size:10px">?</kbd> pour les raccourcis</span>
+  </div>
 </footer>
 
 <div id="modalRoot"></div>
