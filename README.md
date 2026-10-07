@@ -4,8 +4,8 @@ Site vitrine de la compagnie de taxi **Taxi Downtown** sur le serveur RP **Sensi
 
 ## 🌐 Site en ligne
 
-- **Production** : https://TON-PSEUDO.github.io/taxi-downtown/
-- **Worker API** : https://taxi-downtown.TON-PSEUDO.workers.dev
+- **Production** : https://eni-dev09.github.io/taxi-downtown/
+- **Worker API** : https://taxi-downtown.yassinetrepaud6.workers.dev
 
 ## ✨ Fonctionnalités
 
