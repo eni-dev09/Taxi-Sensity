@@ -61,7 +61,11 @@ var STATE = LS.get('td-state', null) || {
   invoices: [],
   employees: [],
   vehicles: [],
-  assignments: {},
+  assignments: {
+    'JZ0498AE': 'Sam Le Gros',
+    'DC3624SY': 'Romeo Cali',
+    'WN5307RY': 'Jimy Smith'
+  },
   history: [],
   baseOverrides: {},
   updatedAt: null
@@ -289,10 +293,15 @@ var BASE_FLEET = [
   { id:'td-013', model:'Taxi Eon', plate:'BX5408WL', ref:'TD-013', cat:'eon' },
   { id:'td-014', model:'Taxi Eon', plate:'FD3839EL', ref:'TD-014', cat:'eon' },
   { id:'td-015', model:'Taxi', plate:'BP5989FB', ref:'TD-015', cat:'standard' },
-  { id:'td-016', model:'Taxi Argento 7F', plate:'LX4255HP', ref:'TD-016', cat:'argento' }
+  { id:'td-016', model:'Taxi Argento 7F', plate:'LX4255HP', ref:'TD-016', cat:'argento' },
+  { id:'td-017', model:'Taxi Argento 7F', plate:'JZ0498AE', ref:'TD-017', cat:'argento' },
+  { id:'td-018', model:'Taxi Argento 7F', plate:'DC3624SY', ref:'TD-018', cat:'argento' },
+  { id:'td-019', model:'Stretch', plate:'NP5063XP', ref:'TD-019', cat:'stretch' },
+  { id:'td-020', model:'Taxi Argento 7F', plate:'WN5307RY', ref:'TD-020', cat:'argento' }
 ];
 
-var CATS = { standard:'Standard', eon:'Eon', starlight:'Starlight', stanier:'Stanier LE', argento:'Argento 7F', custom:'Personnalisé' };
+
+var CATS = { standard:'Standard', eon:'Eon', starlight:'Starlight', stanier:'Stanier LE', argento:'Argento 7F', stretch:'Stretch', custom:'Personnalisé' };
 var ROLES = ['Novice','Chauffeur Confirmé','Chauffeur Senior','Chef de service','Superviseur','Responsable CM','Directeur Adjoint','Directeur'];
 var HIGH_ROLES = ['Directeur','Directeur Adjoint','Responsable CM','Superviseur','Chef de service'];
 
