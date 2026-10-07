@@ -71,7 +71,74 @@ var STATE = LS.get('td-state', null) || {
 });
 if (!STATE.assignments || typeof STATE.assignments !== 'object') STATE.assignments = {};
 if (!STATE.baseOverrides || typeof STATE.baseOverrides !== 'object') STATE.baseOverrides = {};
+/* ═══ SAUVEGARDES AUTOMATIQUES ═══ */
+var BACKUPS_KEY = 'td-backups';
+var MAX_BACKUPS = 10;
+var _previousSnapshot = null;
+var _skipBackupOnce = false;
 
+function getBackups(){
+  try { return JSON.parse(localStorage.getItem(BACKUPS_KEY) || '[]'); }
+  catch(e){ return []; }
+}
+function setBackups(arr){
+  try { localStorage.setItem(BACKUPS_KEY, JSON.stringify(arr)); } catch(e){}
+}
+function captureSnapshot(){
+  return {
+    invoices: JSON.parse(JSON.stringify(STATE.invoices || [])),
+    employees: JSON.parse(JSON.stringify(STATE.employees || [])),
+    vehicles: JSON.parse(JSON.stringify(STATE.vehicles || [])),
+    assignments: JSON.parse(JSON.stringify(STATE.assignments || {})),
+    history: JSON.parse(JSON.stringify(STATE.history || [])),
+    baseOverrides: JSON.parse(JSON.stringify(STATE.baseOverrides || {}))
+  };
+}
+function createBackup(label){
+  var current = captureSnapshot();
+  // Évite les backups identiques consécutifs
+  if (_previousSnapshot){
+    var a = JSON.stringify(_previousSnapshot);
+    var b = JSON.stringify(current);
+    if (a === b) return false;
+    var backups = getBackups();
+    backups.unshift({
+      id: 'bak-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+      ts: Date.now(),
+      label: label || 'Modification',
+      snapshot: _previousSnapshot
+    });
+    backups = backups.slice(0, MAX_BACKUPS);
+    setBackups(backups);
+  }
+  _previousSnapshot = current;
+  return true;
+}
+function restoreBackup(id){
+  var backups = getBackups();
+  var b = backups.filter(function(x){ return x.id === id; })[0];
+  if (!b) return false;
+  _skipBackupOnce = true;
+  STATE.invoices = JSON.parse(JSON.stringify(b.snapshot.invoices || []));
+  STATE.employees = JSON.parse(JSON.stringify(b.snapshot.employees || []));
+  STATE.vehicles = JSON.parse(JSON.stringify(b.snapshot.vehicles || []));
+  STATE.assignments = JSON.parse(JSON.stringify(b.snapshot.assignments || {}));
+  STATE.history = JSON.parse(JSON.stringify(b.snapshot.history || []));
+  STATE.baseOverrides = JSON.parse(JSON.stringify(b.snapshot.baseOverrides || {}));
+  STATE.updatedAt = Date.now();
+  STATE.history.unshift({ action: '🔄 Restauration · ' + b.label, ts: Date.now(), by: 'Direction' });
+  applyBaseOverrides();
+  saveState();
+  _previousSnapshot = captureSnapshot();
+  return true;
+}
+function deleteBackup(id){
+  var backups = getBackups().filter(function(x){ return x.id !== id; });
+  setBackups(backups);
+}
+function clearAllBackups(){
+  setBackups([]);
+}
 /* ═══ SYNC ═══ */
 var SYNC = {
   setState: function(state, label){
