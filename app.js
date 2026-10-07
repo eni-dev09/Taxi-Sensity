@@ -519,9 +519,8 @@ function renderAllPublic(){
 
 /* ═══ ADMIN PANEL ═══ */
 function buildAdminHTML(activeTab){
-  activeTab = activeTab || 'factures';
+  activeTab = activeTab || 'vehicules';
   var tabs = [
-    ['factures','Factures'],
     ['vehicules','Véhicules'],
     ['employes','Employés'],
     ['attributions','Attributions'],
@@ -543,7 +542,6 @@ function renderAdminContent(tab){
   if (!root) return;
   LS.set('td-admin-tab', tab);
   root.innerHTML = (function(){
-    if (tab === 'factures') return buildPanelFactures();
     if (tab === 'vehicules') return buildPanelVehicules();
     if (tab === 'employes') return buildPanelEmployes();
     if (tab === 'attributions') return buildPanelAttributions();
@@ -1161,7 +1159,8 @@ function clearAll(){
 /* ═══ ADMIN ENTRY ═══ */
 function openAdminPanel(){
   closeTopModal();
-  var savedTab = LS.get('td-admin-tab', 'factures');
+  var savedTab = LS.get('td-admin-tab', 'vehicules');
+   if (savedTab === 'factures') savedTab = 'vehicules';
   var m = openModal(buildAdminHTML(savedTab));
   m.querySelector('#adminClose').addEventListener('click', function(){ if (m.parentNode) m.parentNode.removeChild(m); });
   m.addEventListener('click', function(e){ if (e.target === m && m.parentNode) m.parentNode.removeChild(m); });
@@ -1281,11 +1280,10 @@ document.addEventListener('click', function(e){
 var SECTION_LABELS = {
   hero:'Accueil',
   primes:'Primes',
-  hornys:"Horny's",
+  hornys:"Horny's & Tarifs",
+  infos:'Infos service',
   fleet:'Flotte',
-  team:'Équipe',
-  tarifs:'Tarifs',
-  contact:'Contact'
+  team:'Équipe'
 };
 function setupScrollSpy(){
   var sections = $$('[data-section]');
