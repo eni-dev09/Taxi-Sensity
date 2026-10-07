@@ -1043,7 +1043,7 @@ function manualBackup(){
 }
 
 function clearBackupsPrompt(){
-  showConfirm('Vider toutes les sauvegardes ?', 'Toutes les ' + getBackups().length + ' sauvegardes seront supprimées.', { danger: true, okLabel: 'Vider' }).then(function(ok){
+  showConfirm('Vider toutes les sauvegardes ?', 'Toutes les sauvegardes seront supprimées.', { danger: true, okLabel: 'Vider' }).then(function(ok){
     if (!ok) return;
     clearAllBackups();
     toast('ok', 'Sauvegardes vidées');
