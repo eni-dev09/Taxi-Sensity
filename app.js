@@ -6,7 +6,7 @@
 'use strict';
 
 /* ═══ CONFIG WORKER ═══ */
-var WORKER_URL = 'https://taxi-downtown.TON-PSEUDO.workers.dev';
+var WORKER_URL = 'https://taxi-downtown.yassinetrepaud6.workers.dev/';
 var WORKER_CONFIGURED = !!(WORKER_URL && WORKER_URL.indexOf('https://') === 0 && WORKER_URL.indexOf('TON-PSEUDO') === -1);
 
 /* ═══ CODE ADMIN OBFUSQUÉ (XOR 0x1F sur "DOWNTOWN26") ═══ */
