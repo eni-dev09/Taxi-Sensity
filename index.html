@@ -10,7 +10,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800&family=Permanent+Marker&display=swap">
-
 <link rel="stylesheet" href="style.css">
 
 <script>
@@ -44,7 +43,7 @@ setTimeout(function(){
     <button class="nav__icon" id="themeBtn" type="button" aria-label="Thème" title="Changer de thème">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
     </button>
-    <a class="btn btn--sm btn--ghost" href="#contact" data-scroll="contact">Nous joindre</a>
+    <a class="btn btn--sm btn--ghost" href="#infos" data-scroll="infos">Nous joindre</a>
     <button class="nav__menu" id="menuBtn" type="button" aria-expanded="false">
       <span>Menu</span>
       <span class="bars"><i></i><i></i><i></i></span>
@@ -56,11 +55,10 @@ setTimeout(function(){
   <ul class="menu__links">
     <li><a href="#hero" data-scroll="hero"><small>01</small><span>Accueil</span></a></li>
     <li><a href="#primes" data-scroll="primes"><small>02</small><span>Primes</span></a></li>
-    <li><a href="#hornys" data-scroll="hornys"><small>03</small><span>Horny's</span></a></li>
-    <li><a href="#fleet" data-scroll="fleet"><small>04</small><span>Flotte</span></a></li>
-    <li><a href="#team" data-scroll="team"><small>05</small><span>Équipe</span></a></li>
-    <li><a href="#tarifs" data-scroll="tarifs"><small>06</small><span>Tarifs</span></a></li>
-    <li><a href="#contact" data-scroll="contact"><small>07</small><span>Contact</span></a></li>
+    <li><a href="#hornys" data-scroll="hornys"><small>03</small><span>Horny's & Tarifs</span></a></li>
+    <li><a href="#infos" data-scroll="infos"><small>04</small><span>Infos service</span></a></li>
+    <li><a href="#fleet" data-scroll="fleet"><small>05</small><span>Flotte</span></a></li>
+    <li><a href="#team" data-scroll="team"><small>06</small><span>Équipe</span></a></li>
   </ul>
   <div class="menu__side">
     <div><h4>Disponibilité</h4><p style="color:var(--ink-1)">24 h / 24 · 7 j / 7<br>Radio <b>17 Hz</b></p></div>
@@ -86,6 +84,7 @@ setTimeout(function(){
 
 <main class="main" id="main">
 
+<!-- ═══ 01 · HERO ═══ -->
 <section class="s s-hero" id="hero" data-section="hero">
   <div class="s__inner">
     <h1 class="sr-only">Taxi Downtown · Sensity RP</h1>
@@ -116,6 +115,7 @@ setTimeout(function(){
   </div>
 </section>
 
+<!-- ═══ 02 · PRIMES ═══ -->
 <section class="s" id="primes" data-section="primes">
   <div class="s__inner">
     <div style="margin-bottom:52px;max-width:820px">
@@ -139,15 +139,19 @@ setTimeout(function(){
   </div>
 </section>
 
+<!-- ═══ 03 · HORNY'S & TARIFS ═══ -->
 <section class="s" id="hornys" data-section="hornys">
   <div class="s__inner">
     <div style="margin-bottom:52px;max-width:820px">
-      <p class="eyebrow"><i></i>Nouveau partenariat</p>
-      <h2 class="display" style="font-size:clamp(44px,7vw,96px);margin:22px 0">Revente <b>Horny's.</b></h2>
+      <p class="eyebrow"><i></i>Partenariat & Grille tarifaire</p>
+      <h2 class="display" style="font-size:clamp(44px,7vw,96px);margin:22px 0">Horny's <b>& Tarifs.</b></h2>
+      <p style="color:var(--ink-2);font-size:15px;line-height:1.75;max-width:640px">Revente de menus à bord de nos taxis et grille officielle des courses.</p>
     </div>
+
+    <!-- Bloc Horny's -->
     <div class="hornys-grid">
       <div class="hornys-main">
-        <h3>Comment ça marche</h3>
+        <h3>Revente Horny's</h3>
         <p>Tu achètes à <b>92 $ / menu</b>, tu revends <b>200 $</b>, tu touches <b>80 $ de prime directe</b>.</p>
         <div class="flow">
           <div class="flow-step"><span class="step-num">01 · ACHAT</span><b>92 $</b><span>Prix grossiste</span></div>
@@ -164,9 +168,64 @@ setTimeout(function(){
         <div class="hornys-note"><b>Astuce :</b> force la vente orale pendant la course.</div>
       </aside>
     </div>
+
+    <!-- Séparateur -->
+    <div class="team__label" style="margin-top:70px">— Grille tarifaire officielle</div>
+
+    <!-- Bloc Tarifs -->
+    <div class="tarif-grid">
+      <table class="tarif-table">
+        <thead><tr><th>Zone</th><th>Tarif</th></tr></thead>
+        <tbody id="tarifBody"></tbody>
+      </table>
+      <aside class="tarif-note">
+        <h4>Bon à savoir</h4>
+        <p>
+          <b>En ville</b> : trajets intra-Los Santos.<br>
+          <b>Hors ville</b> : banlieue, Sandy Shores, Paleto Bay.<br>
+          <b>Cayo Perico</b> : île privée, tarif premium.<br><br>
+          <b>Nouveaux arrivants</b> : -50 % sur toutes les courses.
+        </p>
+        <span class="tarif-promo">Code Halloween · -25 % tout octobre</span>
+      </aside>
+    </div>
   </div>
 </section>
 
+<!-- ═══ 04 · INFOS SERVICE ═══ -->
+<section class="s" id="infos" data-section="infos">
+  <div class="s__inner">
+    <div style="margin-bottom:52px;max-width:820px">
+      <p class="eyebrow"><i></i>Avant de prendre le service</p>
+      <h2 class="display" style="font-size:clamp(44px,7vw,96px);margin:22px 0">Infos en <b>service.</b></h2>
+      <p style="color:var(--ink-2);font-size:15px;line-height:1.75;max-width:640px">Checklist rapide à suivre avant chaque prise de service. Respecte ces étapes pour être opérationnel.</p>
+    </div>
+    <div class="contact-grid">
+      <div class="ccard">
+        <small>Étape 01 · Radio</small>
+        <b>17 Hz</b>
+        <p>Connecte-toi sur la fréquence radio <b>17 Hz</b> avant de partir en course.</p>
+      </div>
+      <div class="ccard">
+        <small>Étape 02 · Tenue</small>
+        <b>Uniforme</b>
+        <p>Mets ta <b>tenue de service</b> complète et vérifie l'état de ton taxi.</p>
+      </div>
+      <div class="ccard">
+        <small>Étape 03 · Stock</small>
+        <b>5 Menus</b>
+        <p>Prends <b>5 menus chez Horny's</b> avant de commencer ton service.</p>
+      </div>
+      <div class="ccard">
+        <small>Étape 04 · Discord</small>
+        <b>Connexion</b>
+        <p>Signale ta prise de service sur le <a href="https://discord.gg/be8CdjzPna" target="_blank" rel="noopener noreferrer">Discord officiel →</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 05 · FLOTTE ═══ -->
 <section class="s" id="fleet" data-section="fleet">
   <div class="s__inner">
     <div class="cat__head">
@@ -183,6 +242,7 @@ setTimeout(function(){
   </div>
 </section>
 
+<!-- ═══ 06 · ÉQUIPE ═══ -->
 <section class="s" id="team" data-section="team">
   <div class="s__inner">
     <div style="margin-bottom:52px;max-width:820px">
@@ -195,46 +255,23 @@ setTimeout(function(){
   </div>
 </section>
 
-<section class="s" id="tarifs" data-section="tarifs">
-  <div class="s__inner">
-    <div style="margin-bottom:52px;max-width:820px">
-      <p class="eyebrow"><i></i>Grille officielle</p>
-      <h2 class="display" style="font-size:clamp(44px,7vw,96px);margin:22px 0">Les <b>tarifs.</b></h2>
-    </div>
-    <div class="tarif-grid">
-      <table class="tarif-table"><thead><tr><th>Zone</th><th>Tarif</th></tr></thead><tbody id="tarifBody"></tbody></table>
-      <aside class="tarif-note">
-        <h4>Bon à savoir</h4>
-        <p><b>En ville</b> : trajets intra-Los Santos.<br><b>Hors ville</b> : banlieue, Sandy Shores, Paleto Bay.<br><b>Cayo Perico</b> : île privée, tarif premium.<br><br><b>Nouveaux arrivants</b> : -50 % sur toutes les courses.</p>
-        <span class="tarif-promo">Code Halloween · -25 % tout octobre</span>
-      </aside>
-    </div>
-  </div>
-</section>
-
-<section class="s" id="contact" data-section="contact">
-  <div class="s__inner">
-    <div style="margin-bottom:52px;max-width:820px">
-      <p class="eyebrow"><i></i>Nous joindre</p>
-      <h2 class="display" style="font-size:clamp(44px,7vw,96px);margin:22px 0">Une course ? <b>Radio.</b></h2>
-    </div>
-    <div class="contact-grid">
-      <div class="ccard"><small>Fréquence radio</small><b>17 Hz</b><p>Ouverte 24 h / 24.</p></div>
-      <div class="ccard"><small>Disponibilité</small><b>24/7</b><p>Nuit, médical, réservation.</p></div>
-      <div class="ccard"><small>Point de départ</small><b>Tangerine St.</b><p>Stand principal.</p></div>
-      <div class="ccard"><small>Discord</small><b>Taxi</b><p><a href="https://discord.gg/be8CdjzPna" target="_blank" rel="noopener noreferrer">Rejoindre →</a></p></div>
-    </div>
-  </div>
-</section>
-
 </main>
 
 <footer class="footer">
   <div class="footer__grid">
     <div class="footer__brand"><img src="https://files.catbox.moe/nl7txj.png" alt="" width="68" height="68"><p>La compagnie de taxi de référence sur Sensity RP.</p></div>
-    <div><h4>Navigation</h4><ul><li><a href="#fleet" data-scroll="fleet">Flotte</a></li><li><a href="#tarifs" data-scroll="tarifs">Tarifs</a></li><li><a href="#contact" data-scroll="contact">Contact</a></li></ul></div>
+    <div><h4>Navigation</h4><ul>
+      <li><a href="#primes" data-scroll="primes">Primes</a></li>
+      <li><a href="#hornys" data-scroll="hornys">Horny's & Tarifs</a></li>
+      <li><a href="#infos" data-scroll="infos">Infos service</a></li>
+      <li><a href="#fleet" data-scroll="fleet">Flotte</a></li>
+      <li><a href="#team" data-scroll="team">Équipe</a></li>
+    </ul></div>
     <div><h4>Compagnie</h4><ul><li>Tangerine Street</li><li>Los Santos</li><li>Radio 17 Hz</li><li>24 h / 24</li></ul></div>
-    <div><h4>Liens</h4><ul><li><a href="https://discord.gg/be8CdjzPna" target="_blank" rel="noopener noreferrer">Discord Taxi</a></li><li><a href="#contact" data-scroll="contact">Contact</a></li></ul></div>
+    <div><h4>Liens</h4><ul>
+      <li><a href="https://discord.gg/be8CdjzPna" target="_blank" rel="noopener noreferrer">Discord Taxi</a></li>
+      <li><a href="#infos" data-scroll="infos">Contact</a></li>
+    </ul></div>
   </div>
   <div class="footer__bottom"><span>© <span data-year></span> Taxi Downtown · Sensity RP</span></div>
 </footer>
