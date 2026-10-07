@@ -1474,4 +1474,712 @@ function bindPanelEvents(tab){
   if (form) form.addEventListener('submit', function(e){
     e.preventDefault();
     var driver = $('#invDriver').value.trim();
-    var count = Math.max(1, parseInt($('#invCount').value, 10) || 
+    var count = Math.max(1, parseInt($('#invCount').value, 10) || 1);
+    var amount = Math.max(0, parseInt($('#invAmount').value, 10) || 0);
+    if (!driver || !amount) return;
+    if (amount > 1000000){ toast('err', 'Montant trop élevé', 'Max 1 000 000 $.'); return; }
+    STATE.invoices.push({ driver: driver, count: count, amount: amount, date: Date.now() });
+    logAction('Facture · ' + driver + ' (' + count + '×' + amount + '$)');
+    saveState();
+    toast('ok', 'Facture ajoutée', driver + ' · ' + fmt(amount));
+    renderAdminContent('factures');
+    renderAllPublic();
+  });
+
+  var invSearch = $('#invSearch');
+  if (invSearch) invSearch.addEventListener('input', function(){
+    var q = invSearch.value.trim().toLowerCase();
+    $$('#invList .item').forEach(function(el){
+      var name = (el.querySelector('b') || {}).textContent || '';
+      el.style.display = !q || name.toLowerCase().indexOf(q) !== -1 ? '' : 'none';
+    });
+  });
+
+  $$('[data-del-invoice]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var idx = parseInt(btn.dataset.delInvoice, 10);
+      showConfirm('Supprimer cette facture ?', 'Action définitive.', { danger: true }).then(function(ok){
+        if (!ok) return;
+        var inv = STATE.invoices.splice(idx, 1)[0];
+        logAction('Facture supprimée · ' + (inv ? inv.driver : '?'));
+        saveState();
+        toast('ok', 'Facture supprimée');
+        renderAdminContent('factures');
+        renderAllPublic();
+      });
+    });
+  });
+
+  var vf = $('#addVehicleForm');
+  if (vf) vf.addEventListener('submit', function(e){
+    e.preventDefault();
+    var model = $('#vehModel').value.trim();
+    var plate = $('#vehPlate').value.trim().toUpperCase();
+    if (!model || !plate) return;
+    if (!isValidPlate(plate)){ toast('err', 'Plaque invalide', '4 à 8 caractères A-Z et 0-9.'); return; }
+    if (getFleet().some(function(v){ return v.plate === plate; })){ toast('warn', 'Plaque existante'); return; }
+    var id = 'veh-' + Date.now();
+    var ref = 'TD-' + String(getFleet().length + 1).padStart(3, '0');
+    STATE.vehicles.push({ id: id, model: model, plate: plate, ref: ref });
+    logAction('Véhicule ajouté · ' + model + ' (' + plate + ')');
+    saveState();
+    toast('ok', 'Véhicule ajouté', model + ' · ' + plate);
+    renderAdminContent('vehicules');
+    renderAllPublic();
+  });
+
+  $$('[data-del-vehicle]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var id = btn.dataset.delVehicle;
+      showConfirm('Supprimer ce véhicule ?', 'Action définitive.', { danger: true }).then(function(ok){
+        if (!ok) return;
+        var v = STATE.vehicles.filter(function(x){ return x.id === id; })[0];
+        if (!v) return;
+        if (STATE.assignments[v.plate]) delete STATE.assignments[v.plate];
+        STATE.vehicles = STATE.vehicles.filter(function(x){ return x.id !== id; });
+        logAction('Véhicule supprimé · ' + v.plate);
+        saveState();
+        toast('ok', 'Véhicule supprimé');
+        renderAdminContent('vehicules');
+        renderAllPublic();
+      });
+    });
+  });
+
+  var ef = $('#addEmployeeForm');
+  if (ef) ef.addEventListener('submit', function(e){
+    e.preventDefault();
+    var name = $('#empName').value.trim();
+    var role = $('#empRole').value;
+    if (!name) return;
+    if (name.length < 2 || name.length > 60){ toast('err', 'Nom invalide', 'Entre 2 et 60 caractères.'); return; }
+    if (getAllEmployees().some(function(emp){ return emp.name.toLowerCase() === name.toLowerCase() && !emp.firedAt; })){
+      toast('warn', 'Déjà employé', 'Ce nom est déjà utilisé.'); return;
+    }
+    addEmployee(name, role);
+    logAction('Employé ajouté · ' + name + ' (' + role + ')');
+    saveState();
+    toast('ok', 'Employé ajouté', name + ' · ' + role);
+    renderAdminContent('employes');
+    renderAllPublic();
+  });
+
+  $$('[data-act]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var act = btn.dataset.act;
+      var id = btn.dataset.id;
+      var emp = findEmployeeById(id);
+      if (!emp) return;
+      if (act === 'fire') openFireModal(emp);
+      else if (act === 'rehire'){
+        rehireEmployee(id);
+        logAction('Réembauche · ' + emp.name);
+        saveState();
+        toast('ok', 'Réembauché', emp.name);
+        renderAdminContent('employes');
+        renderAllPublic();
+      }
+      else if (act === 'change-role') openChangeRoleModal(emp);
+      else if (act === 'sanction') openSanctionModal(emp);
+    });
+  });
+
+  var af = $('#assignForm');
+  if (af) af.addEventListener('submit', function(e){
+    e.preventDefault();
+    var driver = $('#assignDriver').value;
+    var plate = $('#assignVehicle').value;
+    if (!driver || !plate) return;
+    assignVehicle(plate, driver);
+    logAction('Attribution · ' + driver + ' → ' + plate);
+    saveState();
+    toast('ok', 'Attribution créée', driver + ' → ' + plate);
+    renderAdminContent('attributions');
+    renderAllPublic();
+  });
+
+  $$('[data-unassign]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var plate = btn.dataset.unassign;
+      var driver = STATE.assignments[plate];
+      showConfirm('Retirer cette attribution ?', driver + ' sera détaché du véhicule ' + plate, { danger: false }).then(function(ok){
+        if (!ok) return;
+        unassignVehicle(plate);
+        logAction('Attribution retirée · ' + plate);
+        saveState();
+        toast('ok', 'Attribution retirée');
+        renderAdminContent('attributions');
+        renderAllPublic();
+      });
+    });
+  });
+
+  $$('[data-action]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var act = btn.dataset.action;
+      if (act === 'export-json') exportJSON();
+      else if (act === 'export-csv') exportCSV();
+      else if (act === 'print') printInvoices();
+      else if (act === 'import') $('#adminFileInput').click();
+      else if (act === 'clear-invoices') clearInvoices();
+      else if (act === 'clear-employees') clearEmployees();
+      else if (act === 'clear-vehicles') clearVehicles();
+      else if (act === 'clear-assignments') clearAssignments();
+      else if (act === 'clear-history') clearHistory();
+      else if (act === 'clear-all') clearAll();
+    });
+  });
+}
+
+/* ═══ MODALES SPÉCIALES ═══ */
+function openFireModal(emp){
+  var html = '<button class="modal__x" type="button" id="modalClose">✕</button>' +
+    '<h2>Virer ' + esc(emp.name) + '</h2>' +
+    '<p class="intro">Cette action marque l\'employé comme viré.</p>' +
+    '<form class="form" id="fireForm">' +
+      '<label>Motif<select id="fireReason" required>' +
+        '<option value="Inactivité">Inactivité</option>' +
+        '<option value="Non-respect du règlement">Non-respect du règlement</option>' +
+        '<option value="Comportement inapproprié">Comportement inapproprié</option>' +
+        '<option value="Faute professionnelle">Faute professionnelle</option>' +
+        '<option value="Démission">Démission</option>' +
+        '<option value="Autre">Autre</option></select></label>' +
+      '<label>Détails (optionnel)<textarea id="fireDetails" placeholder="Contexte..." maxlength="300"></textarea></label>' +
+      '<div class="actions">' +
+        '<button type="button" class="btn" id="fireCancel">Annuler</button>' +
+        '<button type="submit" class="btn btn--danger">Virer</button></div></form>';
+  var m = openModal(html, { small: true });
+  m.querySelector('#modalClose').addEventListener('click', function(){ if (m.parentNode) m.parentNode.removeChild(m); });
+  m.querySelector('#fireCancel').addEventListener('click', function(){ if (m.parentNode) m.parentNode.removeChild(m); });
+  m.querySelector('#fireForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var reason = m.querySelector('#fireReason').value;
+    var details = m.querySelector('#fireDetails').value.trim();
+    var fullReason = details ? reason + ' — ' + details : reason;
+    fireEmployee(emp.id, fullReason);
+    var plate = getVehicleForEmployee(emp.name);
+    if (plate) unassignVehicle(plate);
+    logAction('Renvoi · ' + emp.name + ' (' + fullReason + ')');
+    saveState();
+    toast('warn', 'Employé viré', emp.name);
+    if (m.parentNode) m.parentNode.removeChild(m);
+    renderAdminContent('employes');
+    renderAllPublic();
+  });
+}
+
+function openChangeRoleModal(emp){
+  var html = '<button class="modal__x" type="button" id="modalClose">✕</button>' +
+    '<h2>Changer le rôle</h2>' +
+    '<p class="intro">' + esc(emp.name) + ' · actuellement <b>' + esc(emp.role) + '</b></p>' +
+    '<form class="form" id="changeRoleForm">' +
+      '<label>Nouveau rôle<select id="newRole" required>' +
+        ROLES.map(function(r){
+          return '<option value="' + esc(r) + '"' + (r === emp.role ? ' selected' : '') + '>' + esc(r) + '</option>';
+        }).join('') + '</select></label>' +
+      '<div class="actions">' +
+        '<button type="button" class="btn" id="crCancel">Annuler</button>' +
+        '<button type="submit" class="btn btn--primary">Valider</button></div></form>';
+  var m = openModal(html, { small: true });
+  m.querySelector('#modalClose').addEventListener('click', function(){ if (m.parentNode) m.parentNode.removeChild(m); });
+  m.querySelector('#crCancel').addEventListener('click', function(){ if (m.parentNode) m.parentNode.removeChild(m); });
+  m.querySelector('#changeRoleForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var newRole = m.querySelector('#newRole').value;
+    if (newRole === emp.role){ if (m.parentNode) m.parentNode.removeChild(m); return; }
+    changeRole(emp.id, newRole);
+    logAction('Rôle · ' + emp.name + ' : ' + emp.role + ' → ' + newRole);
+    saveState();
+    toast('ok', 'Rôle mis à jour', emp.name + ' · ' + newRole);
+    if (m.parentNode) m.parentNode.removeChild(m);
+    renderAdminContent('employes');
+    renderAllPublic();
+  });
+}
+
+function openSanctionModal(emp){
+  var html = '<button class="modal__x" type="button" id="modalClose">✕</button>' +
+    '<h2>Sanctionner ' + esc(emp.name) + '</h2>' +
+    '<p class="intro">Niveau 3 = licenciement automatique.</p>' +
+    '<form class="form" id="sanctionForm">' +
+      '<label>Niveau<select id="sanctionLevel" required>' +
+        '<option value="1">Niveau 1 — Avertissement</option>' +
+        '<option value="2">Niveau 2 — Mise à pied</option>' +
+        '<option value="3">Niveau 3 — Licenciement</option></select></label>' +
+      '<label>Motif<textarea id="sanctionReason" placeholder="Raison..." maxlength="300"></textarea></label>' +
+      '<div class="actions">' +
+        '<button type="button" class="btn" id="scCancel">Annuler</button>' +
+        '<button type="submit" class="btn btn--warn">Appliquer</button></div></form>';
+  var m = openModal(html, { small: true });
+  m.querySelector('#modalClose').addEventListener('click', function(){ if (m.parentNode) m.parentNode.removeChild(m); });
+  m.querySelector('#scCancel').addEventListener('click', function(){ if (m.parentNode) m.parentNode.removeChild(m); });
+  m.querySelector('#sanctionForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var level = parseInt(m.querySelector('#sanctionLevel').value, 10);
+    var reason = m.querySelector('#sanctionReason').value.trim();
+    sanctionEmployee(emp.id, level, reason);
+    if (level === 3){
+      fireEmployee(emp.id, 'Licenciement · ' + (reason || 'Niveau 3'));
+      var plate = getVehicleForEmployee(emp.name);
+      if (plate) unassignVehicle(plate);
+    }
+    logAction('Sanction N' + level + ' · ' + emp.name + (reason ? ' (' + reason + ')' : ''));
+    saveState();
+    toast(level === 3 ? 'err' : 'warn', 'Sanction N' + level, emp.name);
+    if (m.parentNode) m.parentNode.removeChild(m);
+    renderAdminContent('employes');
+    renderAllPublic();
+  });
+}
+
+/* ═══ ACTIONS GLOBALES ═══ */
+function exportJSON(){
+  var data = {
+    invoices: STATE.invoices, employees: STATE.employees, vehicles: STATE.vehicles,
+    assignments: STATE.assignments, history: STATE.history,
+    baseOverrides: STATE.baseOverrides,
+    exportedAt: new Date().toISOString(), version: 2
+  };
+  var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'taxi-downtown-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 500);
+  toast('ok', 'Export JSON', 'Fichier téléchargé.');
+}
+
+function exportCSV(){
+  if (!STATE.invoices.length){ toast('warn', 'Aucune facture'); return; }
+  var rows = [['Date','Chauffeur','Nb factures','Montant','Entreprise 60%','Chauffeur 40%']];
+  STATE.invoices.forEach(function(inv){
+    rows.push([
+      inv.date ? new Date(inv.date).toLocaleString('fr-FR') : '',
+      inv.driver || '', inv.count || 1, inv.amount || 0,
+      Math.round((inv.amount || 0) * 0.6), Math.round((inv.amount || 0) * 0.4)
+    ]);
+  });
+  var csv = rows.map(function(r){
+    return r.map(function(c){ return '"' + String(c).replace(/"/g, '""') + '"'; }).join(';');
+  }).join('\n');
+  var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'taxi-downtown-factures-' + new Date().toISOString().slice(0, 10) + '.csv';
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 500);
+  toast('ok', 'Export CSV', STATE.invoices.length + ' factures.');
+}
+
+function printInvoices(){
+  var w = window.open('', '', 'width=900,height=700');
+  var html = '<!doctype html><html><head><title>Factures Taxi Downtown</title><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px solid #ccc;text-align:left}h1{font-size:18px}</style></head><body>';
+  html += '<h1>Taxi Downtown — Factures</h1><p>Généré le ' + new Date().toLocaleString('fr-FR') + '</p>';
+  html += '<table><thead><tr><th>Date</th><th>Chauffeur</th><th>Nb</th><th>Montant</th></tr></thead><tbody>';
+  STATE.invoices.forEach(function(inv){
+    html += '<tr><td>' + (inv.date ? new Date(inv.date).toLocaleDateString('fr-FR') : '') + '</td>';
+    html += '<td>' + esc(inv.driver) + '</td>';
+    html += '<td>' + (inv.count || 1) + '</td>';
+    html += '<td>' + fmt(inv.amount) + '</td></tr>';
+  });
+  html += '</tbody></table></body></html>';
+  w.document.write(html);
+  w.document.close();
+  setTimeout(function(){ w.print(); }, 500);
+}
+
+function importJSON(file){
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    try {
+      var data = JSON.parse(ev.target.result);
+      if (Array.isArray(data.invoices)) STATE.invoices = data.invoices;
+      if (Array.isArray(data.employees)) STATE.employees = data.employees;
+      if (Array.isArray(data.vehicles)) STATE.vehicles = data.vehicles;
+      if (data.assignments && typeof data.assignments === 'object') STATE.assignments = data.assignments;
+      if (Array.isArray(data.history)) STATE.history = data.history;
+      if (data.baseOverrides && typeof data.baseOverrides === 'object') STATE.baseOverrides = data.baseOverrides;
+      applyBaseOverrides();
+      logAction('Import de données');
+      saveState();
+      toast('ok', 'Import réussi');
+      closeTopModal();
+      openAdminPanel();
+      renderAllPublic();
+    } catch(err){ toast('err', 'Fichier invalide', 'JSON corrompu.'); }
+  };
+  reader.readAsText(file);
+}
+
+function clearInvoices(){
+  showConfirm('Vider toutes les factures ?', 'Définitif.', { danger: true }).then(function(ok){
+    if (!ok) return;
+    STATE.invoices = [];
+    logAction('Factures vidées');
+    saveState();
+    toast('ok', 'Factures vidées');
+    renderAdminContent('factures');
+    renderAllPublic();
+  });
+}
+function clearEmployees(){
+  showConfirm('Vider les employés custom ?', 'Les employés de base restent.', { danger: true }).then(function(ok){
+    if (!ok) return;
+    STATE.employees = [];
+    logAction('Employés custom vidés');
+    saveState();
+    toast('ok', 'Employés vidés');
+    renderAdminContent('employes');
+    renderAllPublic();
+  });
+}
+function clearVehicles(){
+  showConfirm('Vider les véhicules custom ?', 'Les véhicules de base restent.', { danger: true }).then(function(ok){
+    if (!ok) return;
+    STATE.vehicles = [];
+    logAction('Véhicules custom vidés');
+    saveState();
+    toast('ok', 'Véhicules vidés');
+    renderAdminContent('vehicules');
+    renderAllPublic();
+  });
+}
+function clearAssignments(){
+  showConfirm('Retirer toutes les attributions ?', '', { danger: true }).then(function(ok){
+    if (!ok) return;
+    STATE.assignments = {};
+    logAction('Attributions vidées');
+    saveState();
+    toast('ok', 'Attributions vidées');
+    renderAdminContent('attributions');
+    renderAllPublic();
+  });
+}
+function clearHistory(){
+  showConfirm('Vider le journal ?', '', { danger: true }).then(function(ok){
+    if (!ok) return;
+    STATE.history = [];
+    saveState();
+    toast('ok', 'Journal vidé');
+    renderAdminContent('historique');
+  });
+}
+function clearAll(){
+  showConfirm('TOUT réinitialiser ?', 'Factures, employés, véhicules, attributions — tout effacé.', { danger: true, okLabel: 'Tout effacer' }).then(function(ok){
+    if (!ok) return;
+    STATE = { invoices: [], employees: [], vehicles: [], assignments: {}, history: [], baseOverrides: {}, updatedAt: Date.now() };
+    saveState();
+    toast('err', 'Réinitialisation', 'Toutes les données effacées.');
+    closeTopModal();
+    renderAllPublic();
+  });
+}
+
+/* ═══ ADMIN ENTRY ═══ */
+function openAdminPanel(){
+  closeTopModal();
+  var savedTab = LS.get('td-admin-tab', 'factures');
+  var m = openModal(buildAdminHTML(savedTab));
+  m.querySelector('#adminClose').addEventListener('click', function(){ if (m.parentNode) m.parentNode.removeChild(m); });
+  m.addEventListener('click', function(e){ if (e.target === m && m.parentNode) m.parentNode.removeChild(m); });
+  m.querySelectorAll('.tab').forEach(function(t){
+    t.addEventListener('click', function(){
+      m.querySelectorAll('.tab').forEach(function(x){ x.classList.remove('on'); });
+      t.classList.add('on');
+      renderAdminContent(t.dataset.tab);
+    });
+  });
+  renderAdminContent(savedTab);
+}
+
+/* ═══ LOGIN ═══ */
+var LOGIN_KEY = 'td-login';
+var ADMIN_SESSION_KEY = 'td-admin-session';
+var ADMIN_SESSION_DURATION = 2 * 60 * 60 * 1000;
+function getLoginState(){ return LS.get(LOGIN_KEY, { attempts: 0, lockUntil: 0 }); }
+function setLoginState(s){ LS.set(LOGIN_KEY, s); }
+function canAttemptLogin(){
+  var s = getLoginState();
+  if (s.lockUntil > Date.now()) return { ok: false, secs: Math.ceil((s.lockUntil - Date.now()) / 1000) };
+  return { ok: true };
+}
+function recordLoginAttempt(success){
+  var s = getLoginState();
+  if (success){ s.attempts = 0; s.lockUntil = 0; }
+  else {
+    s.attempts = (s.attempts || 0) + 1;
+    if (s.attempts >= 5){ s.lockUntil = Date.now() + 60000; s.attempts = 0; }
+  }
+  setLoginState(s);
+}
+function isAdminSessionValid(){
+  try {
+    var s = sessionStorage.getItem(ADMIN_SESSION_KEY);
+    if (!s) return false;
+    return JSON.parse(s).expiresAt > Date.now();
+  } catch(e){ return false; }
+}
+function setAdminSession(){
+  sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({ expiresAt: Date.now() + ADMIN_SESSION_DURATION }));
+}
+
+function openLoginModal(){
+  closeTopModal();
+  var html = '<button class="modal__x" type="button" id="loginClose">✕</button>' +
+    '<h2>Accès restreint</h2>' +
+    '<p class="intro">Réservé à la direction.</p>' +
+    '<form class="form" id="loginForm">' +
+      '<label>Code secret<input type="password" id="loginCode" autocomplete="off" required autofocus></label>' +
+      '<p class="err" id="loginErr"></p>' +
+      '<div class="actions"><button type="submit" class="btn btn--primary">Valider</button></div></form>';
+  var m = openModal(html, { small: true });
+  var input = m.querySelector('#loginCode');
+  m.querySelector('#loginClose').addEventListener('click', function(){ if (m.parentNode) m.parentNode.removeChild(m); });
+  m.addEventListener('click', function(e){ if (e.target === m && m.parentNode) m.parentNode.removeChild(m); });
+  m.querySelector('#loginForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var attempt = canAttemptLogin();
+    if (!attempt.ok){
+      m.querySelector('#loginErr').textContent = 'Trop de tentatives. Réessaie dans ' + attempt.secs + 's.';
+      return;
+    }
+    if (input.value === ADMIN_CODE){
+      recordLoginAttempt(true);
+      setAdminSession();
+      if (m.parentNode) m.parentNode.removeChild(m);
+      openAdminPanel();
+    } else {
+      recordLoginAttempt(false);
+      m.querySelector('#loginErr').textContent = 'Code incorrect.';
+      input.value = '';
+      input.focus();
+    }
+  });
+  setTimeout(function(){ if (input) input.focus(); }, 100);
+}
+
+/* ═══ MENU ═══ */
+function setupMenu(){
+  var btn = $('#menuBtn'), menu = $('#menu');
+  if (!btn || !menu) return;
+  btn.addEventListener('click', function(){
+    var open = btn.getAttribute('aria-expanded') === 'true';
+    if (open){
+      btn.setAttribute('aria-expanded', 'false');
+      menu.classList.remove('is-open');
+      body.classList.remove('menu-open');
+      setTimeout(function(){ menu.hidden = true; }, 400);
+    } else {
+      btn.setAttribute('aria-expanded', 'true');
+      menu.hidden = false;
+      requestAnimationFrame(function(){ menu.classList.add('is-open'); });
+      body.classList.add('menu-open');
+    }
+  });
+  $$('.menu__links a').forEach(function(a){
+    a.addEventListener('click', function(){
+      if (btn.getAttribute('aria-expanded') === 'true') btn.click();
+    });
+  });
+}
+
+/* ═══ SCROLL ═══ */
+document.addEventListener('click', function(e){
+  var link = e.target.closest ? e.target.closest('[data-scroll]') : null;
+  if (!link) return;
+  e.preventDefault();
+  var t = link.dataset.scroll;
+  if (t === 'top'){ window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+  var el = document.getElementById(t);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+var SECTION_LABELS = { hero:'Accueil', classement:'Classement', primes:'Primes', hornys:"Horny's", fleet:'Flotte', team:'Équipe', tarifs:'Tarifs', contact:'Contact' };
+function setupScrollSpy(){
+  var sections = $$('[data-section]');
+  var hud = $('#hudSection');
+  var toTop = $('#toTop');
+  var ticking = false;
+  function update(){
+    var y = window.scrollY + window.innerHeight * 0.35;
+    var cur = 'hero';
+    sections.forEach(function(s){ if (s.offsetTop <= y) cur = s.dataset.section; });
+    if (hud) hud.textContent = SECTION_LABELS[cur] || cur;
+    if (toTop) toTop.classList.toggle('is-visible', window.scrollY > window.innerHeight * 0.6);
+    ticking = false;
+  }
+  window.addEventListener('scroll', function(){
+    if (!ticking){ requestAnimationFrame(update); ticking = true; }
+  }, { passive: true });
+  update();
+  var t = $('#toTop');
+  if (t) t.addEventListener('click', function(){ window.scrollTo({ top: 0, behavior: 'smooth' }); });
+}
+
+/* ═══ THEME ═══ */
+function applyTheme(theme){
+  if (['dark','light','halloween'].indexOf(theme) === -1) theme = 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+  LS.set('td-theme', theme);
+  var meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', theme === 'light' ? '#f4f4f7' : theme === 'halloween' ? '#0a0606' : '#050506');
+}
+function setupTheme(){
+  applyTheme(LS.get('td-theme', 'dark'));
+  var btn = $('#themeBtn');
+  if (btn) btn.addEventListener('click', function(){
+    var cur = document.documentElement.getAttribute('data-theme') || 'dark';
+    var arr = ['dark','light','halloween'];
+    applyTheme(arr[(arr.indexOf(cur) + 1) % arr.length]);
+  });
+}
+
+/* ═══ ADMIN TRIGGER ═══ */
+function setupAdminTrigger(){
+  var trigger = $('#adminTrigger');
+  if (!trigger) return;
+  var cc = 0, ct = null;
+  trigger.addEventListener('click', function(){
+    cc++;
+    trigger.classList.add('arming');
+    clearTimeout(ct);
+    ct = setTimeout(function(){ cc = 0; trigger.classList.remove('arming'); }, 1800);
+    if (cc >= 5){ cc = 0; trigger.classList.remove('arming'); if (isAdminSessionValid()) openAdminPanel(); else openLoginModal(); }
+  });
+  trigger.addEventListener('dblclick', function(e){
+    e.preventDefault();
+    if (isAdminSessionValid()) openAdminPanel(); else openLoginModal();
+  });
+  trigger.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      if (isAdminSessionValid()) openAdminPanel(); else openLoginModal();
+    }
+  });
+}
+
+/* ═══ FLEET SEARCH ═══ */
+function setupFleetSearch(){
+  var input = $('#fleetSearch'); if (!input) return;
+  var d = null;
+  input.addEventListener('input', function(e){
+    clearTimeout(d);
+    d = setTimeout(function(){ searchQuery = e.target.value; renderFleet(); }, 120);
+  });
+}
+
+/* ═══ MIGRATION ancien format ═══ */
+function migrateOldStorage(){
+  if (LS.get('td-state') !== null) return;
+  var oldInvoices = LS.get('td-custom-invoices', []);
+  var oldVehicles = LS.get('td-custom-vehicles', []);
+  var oldEmployees = LS.get('td-custom-employees', []);
+  var oldAssignments = LS.get('td-assignments', {});
+  if (oldInvoices.length || oldVehicles.length || oldEmployees.length || Object.keys(oldAssignments || {}).length){
+    STATE.invoices = oldInvoices;
+    STATE.vehicles = oldVehicles.map(function(v){
+      return { id: v.id || 'veh-' + Date.now(), model: v.model || '?', plate: v.plate || '?', ref: v.ref || 'TD-NEW' };
+    });
+    STATE.employees = oldEmployees.map(function(e){
+      return { id: e.id || 'emp-' + Date.now(), name: e.name || '?', role: e.role || 'Novice', hiredAt: Date.now() };
+    });
+    STATE.assignments = oldAssignments || {};
+    saveState();
+    console.log('[TD] Migration ancien format OK');
+  }
+}
+
+/* ═══ INIT ═══ */
+function init(){
+  try {
+    console.log('[TD] Init démarré');
+
+    $$('[data-year]').forEach(function(el){ el.textContent = new Date().getFullYear(); });
+
+    migrateOldStorage();
+    applyBaseOverrides();
+
+    setupTheme();
+    setupMenu();
+    setupAdminTrigger();
+    setupFleetSearch();
+    setupScrollSpy();
+
+    var fi = $('#adminFileInput');
+    if (fi) fi.addEventListener('change', function(e){
+      var file = e.target.files[0];
+      if (file) importJSON(file);
+      e.target.value = '';
+    });
+
+    // Charge les données distantes
+    var _remoteReady = WORKER_CONFIGURED ? SYNC.load().then(function(data){
+      if (data){
+        var remoteTime = data.updatedAt || 0;
+        var localTime = STATE.updatedAt || 0;
+        if (remoteTime >= localTime){
+          STATE.invoices = Array.isArray(data.invoices) ? data.invoices : [];
+          STATE.employees = Array.isArray(data.employees) ? data.employees : [];
+          STATE.vehicles = Array.isArray(data.vehicles) ? data.vehicles : [];
+          STATE.assignments = (data.assignments && typeof data.assignments === 'object') ? data.assignments : {};
+          STATE.history = Array.isArray(data.history) ? data.history : [];
+          STATE.baseOverrides = data.baseOverrides || {};
+          STATE.updatedAt = remoteTime || Date.now();
+          applyBaseOverrides();
+          LS.set('td-state', STATE);
+          console.log('[TD] Données distantes chargées');
+        } else {
+          console.log('[TD] Local plus récent, upload...');
+          SYNC.save({
+            invoices: STATE.invoices, employees: STATE.employees, vehicles: STATE.vehicles,
+            assignments: STATE.assignments, history: STATE.history,
+            baseOverrides: STATE.baseOverrides, updatedAt: STATE.updatedAt
+          });
+        }
+      }
+    }) : Promise.resolve();
+
+    _remoteReady.then(function(){
+      renderAllPublic();
+      setupHero();
+
+      var bar = $('#loaderBar'), pct = $('#loaderPct'), loader = $('#loader');
+      var n = 0;
+      var int = setInterval(function(){
+        n += 18;
+        if (n >= 100){
+          n = 100;
+          clearInterval(int);
+          if (bar) bar.style.width = '100%';
+          if (pct) pct.textContent = '100';
+          setTimeout(function(){
+            if (loader){
+              loader.classList.add('out');
+              setTimeout(function(){ if (loader.parentNode) loader.parentNode.removeChild(loader); }, 500);
+            }
+            body.classList.remove('is-loading');
+          }, 200);
+        }
+        if (bar) bar.style.width = n + '%';
+        if (pct) pct.textContent = n;
+      }, 80);
+
+      console.log('[TD] ✅ Sync OK —', WORKER_CONFIGURED ? 'Worker actif' : 'Mode local');
+    });
+
+  } catch(err){
+    console.error('[TD] Erreur init :', err);
+    var l = $('#loader');
+    if (l && l.parentNode) l.parentNode.removeChild(l);
+    body.classList.remove('is-loading');
+  }
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+
+})();
+</script>
+
+</body>
+</html>
