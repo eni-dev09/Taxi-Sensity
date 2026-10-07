@@ -1569,6 +1569,13 @@ function init(){
       }, 80);
 
       console.log('[TD] ✅ Sync OK —', WORKER_CONFIGURED ? 'Worker actif' : 'Mode local');
+      setupScrollProgress();
+      setupHornysCalc();
+      setupServiceChecklist();
+      setupCountdown();
+      setupVehicleModal();
+      setupKeyboardShortcuts();
+      setupInstallPrompt();
     });
 
   } catch(err){
