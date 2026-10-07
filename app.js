@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   TAXI DOWNTOWN · Script principal
+   TAXI DOWNTOWN · Script principal — v2.1 (debogué)
    ═══════════════════════════════════════════════════════════ */
 
 (function(){
@@ -71,6 +71,7 @@ var STATE = LS.get('td-state', null) || {
 });
 if (!STATE.assignments || typeof STATE.assignments !== 'object') STATE.assignments = {};
 if (!STATE.baseOverrides || typeof STATE.baseOverrides !== 'object') STATE.baseOverrides = {};
+
 /* ═══ SAUVEGARDES AUTOMATIQUES ═══ */
 var BACKUPS_KEY = 'td-backups';
 var MAX_BACKUPS = 10;
@@ -96,7 +97,6 @@ function captureSnapshot(){
 }
 function createBackup(label){
   var current = captureSnapshot();
-  // Évite les backups identiques consécutifs
   if (_previousSnapshot){
     var a = JSON.stringify(_previousSnapshot);
     var b = JSON.stringify(current);
@@ -139,6 +139,30 @@ function deleteBackup(id){
 function clearAllBackups(){
   setBackups([]);
 }
+function manualBackup(){
+  var backups = getBackups();
+  var snapshot = captureSnapshot();
+  backups.unshift({
+    id: 'bak-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+    ts: Date.now(),
+    label: '📸 Sauvegarde manuelle',
+    snapshot: snapshot
+  });
+  backups = backups.slice(0, MAX_BACKUPS);
+  setBackups(backups);
+  _previousSnapshot = snapshot;
+  toast('ok', 'Sauvegarde créée', 'État actuel enregistré.');
+  renderAdminContent('parametres');
+}
+function clearBackupsPrompt(){
+  showConfirm('Vider toutes les sauvegardes ?', 'Toutes les sauvegardes seront supprimées.', { danger: true, okLabel: 'Vider' }).then(function(ok){
+    if (!ok) return;
+    clearAllBackups();
+    toast('ok', 'Sauvegardes vidées');
+    renderAdminContent('parametres');
+  });
+}
+
 /* ═══ SYNC ═══ */
 var SYNC = {
   setState: function(state, label){
@@ -153,7 +177,7 @@ var SYNC = {
     var self = this;
     var ctrl = window.AbortController ? new AbortController() : null;
     var tid = setTimeout(function(){ if (ctrl) ctrl.abort(); }, 5000);
-    return fetch(WORKER_URL + '/data', { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined })
+    return fetch(WORKER_URL + 'data', { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined })
       .then(function(r){ clearTimeout(tid); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(function(data){ body.classList.remove('offline'); self.setState('ok', 'Synchro'); return data; })
       .catch(function(err){
@@ -170,7 +194,7 @@ var SYNC = {
     var self = this;
     var max = 3;
     this.setState('pending', attempt > 1 ? 'Envoi ' + attempt + '/' + max : 'Envoi...');
-    return fetch(WORKER_URL + '/data', {
+    return fetch(WORKER_URL + 'data', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'X-Admin-Code': ADMIN_CODE },
       body: JSON.stringify(payload)
@@ -192,7 +216,7 @@ var SYNC = {
   },
   notify: function(msg){
     if (!WORKER_CONFIGURED) return Promise.resolve();
-    return fetch(WORKER_URL + '/notify', {
+    return fetch(WORKER_URL + 'notify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Admin-Code': ADMIN_CODE },
       body: JSON.stringify({ message: msg })
@@ -200,10 +224,9 @@ var SYNC = {
   }
 };
 
-/* ═══ SAVE avec debounce ═══ */
+/* ═══ SAVE avec debounce + auto-backup ═══ */
 var _saveDebounce = null;
 function saveState(){
-  // Auto-backup : sauvegarde l'état AVANT la modif en cours
   if (!_skipBackupOnce){
     var lastLabel = (STATE.history[0] && STATE.history[0].action) || 'Modification';
     createBackup(lastLabel);
@@ -617,71 +640,19 @@ function renderAdminContent(tab){
   var root = $('#adminPanelRoot');
   if (!root) return;
   LS.set('td-admin-tab', tab);
-  root.innerHTML = (function(){
-    if (tab === 'vehicules') return buildPanelVehicules();
-    if (tab === 'employes') return buildPanelEmployes();
-    if (tab === 'attributions') return buildPanelAttributions();
-    if (tab === 'historique') return buildPanelHistorique();
-    if (tab === 'parametres') return buildPanelParametres();
-    return '';
-  })();
+  if (tab === 'vehicules') root.innerHTML = buildPanelVehicules();
+  else if (tab === 'employes') root.innerHTML = buildPanelEmployes();
+  else if (tab === 'attributions') root.innerHTML = buildPanelAttributions();
+  else if (tab === 'historique') root.innerHTML = buildPanelHistorique();
+  else if (tab === 'parametres') root.innerHTML = buildPanelParametres();
+  else root.innerHTML = '';
   bindPanelEvents(tab);
   updateAdminStats();
 }
 
 function updateAdminStats(){
   var el = $('#adminStats'); if (!el) return;
-  var total = STATE.invoices.reduce(function(s, i){ return s + (i.amount || 0); }, 0);
-  el.textContent = fmt(total) + ' · ' + getActiveEmployees().length + ' employés · ' + getFleet().length + ' véhicules';
-}
-
-/* ─── FACTURES ─── */
-function buildPanelFactures(){
-  var invoices = STATE.invoices;
-  var total = invoices.reduce(function(s, i){ return s + (i.amount || 0); }, 0);
-  var count = invoices.reduce(function(s, i){ return s + (i.count || 1); }, 0);
-  var avg = invoices.length ? total / invoices.length : 0;
-  var topDriver = '—';
-  if (invoices.length){
-    var stats = {};
-    invoices.forEach(function(inv){ stats[inv.driver] = (stats[inv.driver] || 0) + (inv.amount || 0); });
-    var entries = Object.keys(stats).filter(function(k){ return stats[k] > 0; });
-    entries.sort(function(a, b){ return stats[b] - stats[a]; });
-    if (entries[0]) topDriver = entries[0];
-  }
-  var empList = getActiveEmployees().map(function(e){ return e.name; });
-  var listHTML = invoices.length
-    ? invoices.slice().reverse().map(function(inv, ridx){
-        var realIdx = invoices.length - 1 - ridx;
-        return '<div class="item"><div class="item__av">' + esc(initials(inv.driver)) + '</div>' +
-          '<div class="item__body"><b>' + esc(inv.driver) + '</b>' +
-          '<small>' + fmtDate(inv.date) + ' · ' + inv.count + ' facture' + (inv.count > 1 ? 's' : '') + '</small></div>' +
-          '<div class="item__amt">' + fmt(inv.amount) + '</div>' +
-          '<div class="item__btns"><button type="button" class="item__btn item__btn--danger" data-del-invoice="' + realIdx + '">Supprimer</button></div></div>';
-      }).join('')
-    : '<div class="empty">Aucune facture</div>';
-  return '<div class="stats">' +
-      '<div class="stat"><small>CA total</small><b>' + total.toLocaleString('fr-FR') + ' $</b></div>' +
-      '<div class="stat"><small>Factures</small><b>' + count + '</b></div>' +
-      '<div class="stat"><small>Moyenne</small><b>' + Math.round(avg).toLocaleString('fr-FR') + ' $</b></div>' +
-      '<div class="stat"><small>Top</small><b>' + esc(topDriver.split(' ')[0]) + '</b></div></div>' +
-    '<div class="sec">Ajouter une facture</div>' +
-    '<form class="form" id="addInvoiceForm">' +
-      '<div class="row">' +
-        '<label>Chauffeur<input type="text" id="invDriver" list="invDriverList" required placeholder="Nom"><datalist id="invDriverList">' +
-          empList.map(function(n){ return '<option value="' + esc(n) + '"></option>'; }).join('') + '</datalist></label>' +
-        '<label>Nombre<input type="number" id="invCount" min="1" max="99" value="1" required></label></div>' +
-      '<label>Montant ($)<input type="number" id="invAmount" min="1" max="1000000" step="1" required placeholder="1500"></label>' +
-      '<div class="actions"><button type="submit" class="btn btn--primary">Ajouter</button></div></form>' +
-    '<div class="sec">Toutes les factures <small id="invCountLabel">' + invoices.length + '</small></div>' +
-    '<div class="filter"><input type="search" id="invSearch" placeholder="Rechercher un chauffeur..."></div>' +
-    '<div class="list" id="invList">' + listHTML + '</div>' +
-    '<div class="tools">' +
-      '<button type="button" data-action="export-json">Exporter JSON</button>' +
-      '<button type="button" data-action="export-csv">Exporter CSV</button>' +
-      '<button type="button" data-action="print">Imprimer</button>' +
-      '<button type="button" data-action="import">Importer</button>' +
-      '<button type="button" class="danger" data-action="clear-invoices">Vider</button></div>';
+  el.textContent = getActiveEmployees().length + ' employés · ' + getFleet().length + ' véhicules · ' + Object.keys(STATE.assignments).length + ' attribués';
 }
 
 /* ─── VÉHICULES ─── */
@@ -831,7 +802,7 @@ function buildPanelParametres(){
 
     '<div class="sec">💾 Sauvegardes automatiques <small>' + backups.length + ' / ' + MAX_BACKUPS + '</small></div>' +
     '<p style="color:var(--ink-2);font-size:13px;margin-bottom:12px;line-height:1.6">' +
-      'Une sauvegarde est créée <b>automatiquement avant chaque modification</b> (ajout, suppression, changement). ' +
+      'Une sauvegarde est créée <b>automatiquement avant chaque modification</b>. ' +
       'Les ' + MAX_BACKUPS + ' dernières sont conservées.</p>' +
     '<div class="tools" style="margin-bottom:10px">' +
       '<button type="button" data-action="backup-now">📸 Sauvegarder maintenant</button>' +
@@ -858,33 +829,159 @@ function buildPanelParametres(){
       sizeKB + ' Ko · ' + backups.length + ' sauvegarde(s)</p>';
 }
 
-/* ─── ÉVÉNEMENTS ADMIN ─── */
-function manualBackup(){
-  var backups = getBackups();
-  var snapshot = captureSnapshot();
-  backups.unshift({
-    id: 'bak-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
-    ts: Date.now(),
-    label: '📸 Sauvegarde manuelle',
-    snapshot: snapshot
+/* ═══════════════════════════════════════════════════════════
+   BIND PANEL EVENTS — FONCTION MANQUANTE (bug corrigé)
+   ═══════════════════════════════════════════════════════════ */
+function bindPanelEvents(tab){
+  /* ─── Ajouter véhicule ─── */
+  var vf = $('#addVehicleForm');
+  if (vf) vf.addEventListener('submit', function(e){
+    e.preventDefault();
+    var model = $('#vehModel').value.trim();
+    var plate = $('#vehPlate').value.trim().toUpperCase();
+    if (!model || !plate) return;
+    if (!isValidPlate(plate)){ toast('err', 'Plaque invalide', '4 à 8 caractères A-Z et 0-9.'); return; }
+    if (getFleet().some(function(v){ return v.plate === plate; })){ toast('warn', 'Plaque existante'); return; }
+    var id = 'veh-' + Date.now();
+    var ref = 'TD-' + String(getFleet().length + 1).padStart(3, '0');
+    STATE.vehicles.push({ id: id, model: model, plate: plate, ref: ref });
+    logAction('Véhicule ajouté · ' + model + ' (' + plate + ')');
+    saveState();
+    toast('ok', 'Véhicule ajouté', model + ' · ' + plate);
+    renderAdminContent('vehicules');
+    renderAllPublic();
   });
-  backups = backups.slice(0, MAX_BACKUPS);
-  setBackups(backups);
-  _previousSnapshot = snapshot;
-  toast('ok', 'Sauvegarde créée', 'État actuel enregistré.');
-  renderAdminContent('parametres');
-}
 
-function clearBackupsPrompt(){
-  showConfirm('Vider toutes les sauvegardes ?', 'Toutes les sauvegardes seront supprimées.', { danger: true, okLabel: 'Vider' }).then(function(ok){
-    if (!ok) return;
-    clearAllBackups();
-    toast('ok', 'Sauvegardes vidées');
-    renderAdminContent('parametres');
+  /* ─── Supprimer véhicule ─── */
+  $$('[data-del-vehicle]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var id = btn.dataset.delVehicle;
+      showConfirm('Supprimer ce véhicule ?', 'Action définitive.', { danger: true }).then(function(ok){
+        if (!ok) return;
+        var v = STATE.vehicles.filter(function(x){ return x.id === id; })[0];
+        if (!v) return;
+        if (STATE.assignments[v.plate]) delete STATE.assignments[v.plate];
+        STATE.vehicles = STATE.vehicles.filter(function(x){ return x.id !== id; });
+        logAction('Véhicule supprimé · ' + v.plate);
+        saveState();
+        toast('ok', 'Véhicule supprimé');
+        renderAdminContent('vehicules');
+        renderAllPublic();
+      });
+    });
   });
-}
 
-  // Télécharger une sauvegarde
+  /* ─── Ajouter employé ─── */
+  var ef = $('#addEmployeeForm');
+  if (ef) ef.addEventListener('submit', function(e){
+    e.preventDefault();
+    var name = $('#empName').value.trim();
+    var role = $('#empRole').value;
+    if (!name) return;
+    if (name.length < 2 || name.length > 60){ toast('err', 'Nom invalide', 'Entre 2 et 60 caractères.'); return; }
+    if (getAllEmployees().some(function(emp){ return emp.name.toLowerCase() === name.toLowerCase() && !emp.firedAt; })){
+      toast('warn', 'Déjà employé', 'Ce nom est déjà utilisé.'); return;
+    }
+    addEmployee(name, role);
+    logAction('Employé ajouté · ' + name + ' (' + role + ')');
+    saveState();
+    toast('ok', 'Employé ajouté', name + ' · ' + role);
+    renderAdminContent('employes');
+    renderAllPublic();
+  });
+
+  /* ─── Actions employé (fire, rehire, change-role, sanction) ─── */
+  $$('[data-act]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var act = btn.dataset.act;
+      var id = btn.dataset.id;
+      var emp = findEmployeeById(id);
+      if (!emp) return;
+      if (act === 'fire') openFireModal(emp);
+      else if (act === 'rehire'){
+        rehireEmployee(id);
+        logAction('Réembauche · ' + emp.name);
+        saveState();
+        toast('ok', 'Réembauché', emp.name);
+        renderAdminContent('employes');
+        renderAllPublic();
+      }
+      else if (act === 'change-role') openChangeRoleModal(emp);
+      else if (act === 'sanction') openSanctionModal(emp);
+    });
+  });
+
+  /* ─── Attribuer véhicule ─── */
+  var af = $('#assignForm');
+  if (af) af.addEventListener('submit', function(e){
+    e.preventDefault();
+    var driver = $('#assignDriver').value;
+    var plate = $('#assignVehicle').value;
+    if (!driver || !plate) return;
+    assignVehicle(plate, driver);
+    logAction('Attribution · ' + driver + ' → ' + plate);
+    saveState();
+    toast('ok', 'Attribution créée', driver + ' → ' + plate);
+    renderAdminContent('attributions');
+    renderAllPublic();
+  });
+
+  /* ─── Retirer attribution ─── */
+  $$('[data-unassign]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var plate = btn.dataset.unassign;
+      var driver = STATE.assignments[plate];
+      showConfirm('Retirer cette attribution ?', driver + ' sera détaché du véhicule ' + plate, { danger: false }).then(function(ok){
+        if (!ok) return;
+        unassignVehicle(plate);
+        logAction('Attribution retirée · ' + plate);
+        saveState();
+        toast('ok', 'Attribution retirée');
+        renderAdminContent('attributions');
+        renderAllPublic();
+      });
+    });
+  });
+
+  /* ─── Actions globales (boutons data-action) ─── */
+  $$('[data-action]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var act = btn.dataset.action;
+      if (act === 'export-json') exportJSON();
+      else if (act === 'export-csv') exportCSV();
+      else if (act === 'print') printInvoices();
+      else if (act === 'import') $('#adminFileInput').click();
+      else if (act === 'clear-invoices') clearInvoices();
+      else if (act === 'clear-employees') clearEmployees();
+      else if (act === 'clear-vehicles') clearVehicles();
+      else if (act === 'clear-assignments') clearAssignments();
+      else if (act === 'clear-history') clearHistory();
+      else if (act === 'clear-all') clearAll();
+      else if (act === 'backup-now') manualBackup();
+      else if (act === 'clear-backups') clearBackupsPrompt();
+    });
+  });
+
+  /* ─── Restaurer une sauvegarde ─── */
+  $$('[data-restore]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var id = btn.dataset.restore;
+      var b = getBackups().filter(function(x){ return x.id === id; })[0];
+      if (!b) return;
+      showConfirm('Restaurer cette sauvegarde ?', 'État du ' + fmtDate(b.ts) + ' (' + b.label + ').', { danger: true, okLabel: 'Restaurer' }).then(function(ok){
+        if (!ok) return;
+        if (restoreBackup(id)){
+          toast('ok', 'Sauvegarde restaurée', b.label);
+          renderAdminContent('parametres');
+          renderAllPublic();
+        } else {
+          toast('err', 'Erreur', 'Sauvegarde introuvable.');
+        }
+      });
+    });
+  });
+
+  /* ─── Télécharger une sauvegarde ─── */
   $$('[data-download-backup]').forEach(function(btn){
     btn.addEventListener('click', function(){
       var id = btn.dataset.downloadBackup;
@@ -911,7 +1008,7 @@ function clearBackupsPrompt(){
     });
   });
 
-  // Supprimer une sauvegarde
+  /* ─── Supprimer une sauvegarde ─── */
   $$('[data-del-backup]').forEach(function(btn){
     btn.addEventListener('click', function(){
       var id = btn.dataset.delBackup;
@@ -923,6 +1020,7 @@ function clearBackupsPrompt(){
       });
     });
   });
+}
 
 /* ═══ MODALES SPÉCIALES ═══ */
 function openFireModal(emp){
@@ -1026,30 +1124,6 @@ function openSanctionModal(emp){
 }
 
 /* ═══ ACTIONS GLOBALES ═══ */
-function manualBackup(){
-  var backups = getBackups();
-  var snapshot = captureSnapshot();
-  backups.unshift({
-    id: 'bak-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
-    ts: Date.now(),
-    label: '📸 Sauvegarde manuelle',
-    snapshot: snapshot
-  });
-  backups = backups.slice(0, MAX_BACKUPS);
-  setBackups(backups);
-  _previousSnapshot = snapshot;
-  toast('ok', 'Sauvegarde créée', 'État actuel enregistré.');
-  renderAdminContent('parametres');
-}
-
-function clearBackupsPrompt(){
-  showConfirm('Vider toutes les sauvegardes ?', 'Toutes les sauvegardes seront supprimées.', { danger: true, okLabel: 'Vider' }).then(function(ok){
-    if (!ok) return;
-    clearAllBackups();
-    toast('ok', 'Sauvegardes vidées');
-    renderAdminContent('parametres');
-  });
-}
 function exportJSON(){
   var data = {
     invoices: STATE.invoices, employees: STATE.employees, vehicles: STATE.vehicles,
@@ -1135,7 +1209,7 @@ function clearInvoices(){
     logAction('Factures vidées');
     saveState();
     toast('ok', 'Factures vidées');
-    renderAdminContent('factures');
+    renderAdminContent('parametres');
     renderAllPublic();
   });
 }
@@ -1196,7 +1270,7 @@ function clearAll(){
 function openAdminPanel(){
   closeTopModal();
   var savedTab = LS.get('td-admin-tab', 'vehicules');
-   if (savedTab === 'factures') savedTab = 'vehicules';
+  if (savedTab === 'factures') savedTab = 'vehicules';
   var m = openModal(buildAdminHTML(savedTab));
   m.querySelector('#adminClose').addEventListener('click', function(){ if (m.parentNode) m.parentNode.removeChild(m); });
   m.addEventListener('click', function(e){ if (e.target === m && m.parentNode) m.parentNode.removeChild(m); });
@@ -1427,8 +1501,8 @@ function init(){
     $$('[data-year]').forEach(function(el){ el.textContent = new Date().getFullYear(); });
 
     migrateOldStorage();
-   applyBaseOverrides();
-   _previousSnapshot = captureSnapshot();
+    applyBaseOverrides();
+    _previousSnapshot = captureSnapshot();
 
     setupTheme();
     setupMenu();
@@ -1443,7 +1517,6 @@ function init(){
       e.target.value = '';
     });
 
-    // Charge les données distantes
     var _remoteReady = WORKER_CONFIGURED ? SYNC.load().then(function(data){
       if (data){
         var remoteTime = data.updatedAt || 0;
