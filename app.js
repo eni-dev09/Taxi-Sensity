@@ -34,10 +34,13 @@ var STATE = LS.get('td-state', null) || {
     'FD3839EL': 'Maxime Rivière',
     'YP7603HL': 'Sacha Mermoud',
     'LX4255HP': 'Sofian Badhaoui',
-    'WN5307RY': 'Jimy Smith',
-    'JZ0498AE': 'Sam Le Gros',
+    'RM1393GV': 'Filou Pepito',
     'DC3624SY': 'Romeo Cali',
-    'RM1393GV': 'Filou Pepito'
+    'DIR0001': 'Jimy Smith',
+    'DIR0002': 'Sam Le Gros',
+    'DIR0003': 'Romeo Cali'
+    'JZ0498AE': 'Sam Le Gros',
+    'WN5307RY': 'Jimy Smith',
   },
   history: [],
   baseOverrides: {},
@@ -196,7 +199,10 @@ var BASE_FLEET = [
   { id:'td-017', model:'Taxi Argento 7F', plate:'JZ0498AE', ref:'TD-017', cat:'argento' },
   { id:'td-018', model:'Taxi Argento 7F', plate:'DC3624SY', ref:'TD-018', cat:'argento' },
   { id:'td-019', model:'Stretch', plate:'NP5063XP', ref:'TD-019', cat:'stretch' },
-  { id:'td-020', model:'Taxi Argento 7F', plate:'WN5307RY', ref:'TD-020', cat:'argento' }
+  { id:'td-020', model:'Taxi Argento 7F', plate:'WN5307RY', ref:'TD-020', cat:'argento' },
+  { id:'td-021', model:'Stretch', plate:'DIR0001', ref:'TD-021', cat:'stretch' },
+  { id:'td-022', model:'Stretch', plate:'DIR0002', ref:'TD-022', cat:'stretch' },
+  { id:'td-023', model:'Stretch', plate:'DIR0003', ref:'TD-023', cat:'stretch' }
 ];
 
 var CATS = { standard:'Standard', eon:'Eon', starlight:'Starlight', stanier:'Stanier LE', argento:'Argento 7F', stretch:'Stretch', custom:'Personnalisé' };
