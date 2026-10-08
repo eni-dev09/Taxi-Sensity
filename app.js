@@ -166,7 +166,6 @@ var BASE_EMPLOYEES = [
   { id:'base-3', name:'Romeo Cali', role:'Responsable CM', hiredAt: Date.now() - 30*86400000 },
   { id:'base-4', name:'Bob Musar', role:'Chauffeur Senior', hiredAt: Date.now() - 15*86400000 },
   { id:'base-5', name:'Noah Dupont', role:'Novice', hiredAt: Date.now() - 15*86400000 },
-  { id:'base-6', name:'Luca Safi', role:'Chauffeur Confirmé', hiredAt: Date.now() - 20*86400000 },
   { id:'base-7', name:'Maxime Rivière', role:'Novice', hiredAt: Date.now() - 10*86400000 },
   { id:'base-8', name:'Sofia Fernandez', role:'Chauffeur Senior', hiredAt: Date.now() - 25*86400000 },
   { id:'base-9', name:'Arthur Bendal', role:'Novice', hiredAt: Date.now() - 8*86400000 },
