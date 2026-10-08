@@ -303,7 +303,11 @@ html[data-theme="light"] .s-hero{background-color:#e8e8ee}
 .fleet-search svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--ink-3);fill:none;stroke-width:1.8;pointer-events:none}
 .fleet-count-badge{display:flex;align-items:center;padding:0 16px;border:1px solid var(--line-2);border-radius:var(--radius);background:var(--bg-0);font-family:var(--f-mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3)}
 .fleet-count-badge b{color:var(--accent);margin-right:4px;font-weight:600}
-.cats{display:flex;flex-wrap:wrap;gap:1px;background:var(--line-1);border:1px solid var(--line-1);margin-bottom:32px;border-radius:var(--radius);overflow:hidden}
+.cats{display:flex;flex-direction:column;gap:8px;background:transparent;border:0;margin-bottom:32px}
+.cats__row{display:flex;flex-wrap:wrap;gap:1px;background:var(--line-1);border:1px solid var(--line-1);border-radius:var(--radius);overflow:hidden}
+.cats__row--status{border-color:var(--accent)}
+.chip--status[aria-selected="true"]{background:var(--green);color:var(--bg-0)}
+.chip--status[data-status="unassigned"][aria-selected="true"]{background:var(--warn);color:var(--bg-0)}
 .chip{flex:1 1 auto;padding:15px 20px;min-height:48px;background:var(--bg-0);border:0;font-family:var(--f-mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2);display:inline-flex;align-items:center;justify-content:center;gap:10px;transition:all .22s;font-weight:500;cursor:pointer}
 .chip:hover{color:var(--ink-1);background:var(--bg-2)}
 .chip[aria-selected="true"]{background:var(--accent);color:var(--bg-0);font-weight:600}
