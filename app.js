@@ -364,20 +364,43 @@ function renderHeroStats(){
   STATE.invoices.forEach(function(inv){ if (inv.date && inv.date >= today.getTime()) c += inv.count || 1; });
   var hd = $('#heroDay'); if (hd) hd.textContent = c + ' course' + (c > 1 ? 's' : '');
 }
-var activeCat = 'all', searchQuery = '';
+var activeCat = 'all', searchQuery = '', statusFilter = 'all';
 function renderFleetFilters(){
   var wrap = $('#fleetFilters'); if (!wrap) return;
   var fleet = getFleet();
   var counts = {};
   fleet.forEach(function(v){ counts[v.cat] = (counts[v.cat] || 0) + 1; });
+
+  var assignedCount = 0;
+  fleet.forEach(function(v){ if (getEmployeeForVehicle(v.plate)) assignedCount++; });
+  var unassignedCount = fleet.length - assignedCount;
+
   var cats = [['all','Tous']].concat(Object.keys(counts).map(function(k){ return [k, CATS[k] || k]; }));
-  wrap.innerHTML = cats.map(function(c){
-    return '<button class="chip" type="button" data-cat="' + esc(c[0]) + '" aria-selected="' + (c[0] === activeCat) + '">' + esc(c[1]) + ' <small>' + (c[0] === 'all' ? fleet.length : counts[c[0]]) + '</small></button>';
+  var catHTML = cats.map(function(c){
+    return '<button class="chip" type="button" data-cat="' + esc(c[0]) + '" aria-selected="' + (c[0] === activeCat) + '">' +
+      esc(c[1]) + ' <small>' + (c[0] === 'all' ? fleet.length : counts[c[0]]) + '</small></button>';
   }).join('');
-  wrap.querySelectorAll('.chip').forEach(function(btn){
+
+  var statusHTML =
+    '<button class="chip chip--status" type="button" data-status="all" aria-selected="' + (statusFilter === 'all') + '">Tous</button>' +
+    '<button class="chip chip--status" type="button" data-status="assigned" aria-selected="' + (statusFilter === 'assigned') + '">✓ Attribués <small>' + assignedCount + '</small></button>' +
+    '<button class="chip chip--status" type="button" data-status="unassigned" aria-selected="' + (statusFilter === 'unassigned') + '">✗ Non attribués <small>' + unassignedCount + '</small></button>';
+
+  wrap.innerHTML =
+    '<div class="cats__row">' + catHTML + '</div>' +
+    '<div class="cats__row cats__row--status">' + statusHTML + '</div>';
+
+  wrap.querySelectorAll('.chip[data-cat]').forEach(function(btn){
     btn.addEventListener('click', function(){
       activeCat = btn.dataset.cat;
-      wrap.querySelectorAll('.chip').forEach(function(b){ b.setAttribute('aria-selected', b === btn ? 'true' : 'false'); });
+      wrap.querySelectorAll('.chip[data-cat]').forEach(function(b){ b.setAttribute('aria-selected', b === btn ? 'true' : 'false'); });
+      renderFleet();
+    });
+  });
+  wrap.querySelectorAll('.chip[data-status]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      statusFilter = btn.dataset.status;
+      wrap.querySelectorAll('.chip[data-status]').forEach(function(b){ b.setAttribute('aria-selected', b === btn ? 'true' : 'false'); });
       renderFleet();
     });
   });
@@ -387,6 +410,8 @@ function renderFleet(){
   var fleet = getFleet();
   var q = searchQuery.trim().toLowerCase();
   var filtered = activeCat === 'all' ? fleet : fleet.filter(function(v){ return v.cat === activeCat; });
+  if (statusFilter === 'assigned') filtered = filtered.filter(function(v){ return !!getEmployeeForVehicle(v.plate); });
+  else if (statusFilter === 'unassigned') filtered = filtered.filter(function(v){ return !getEmployeeForVehicle(v.plate); });
   if (q) filtered = filtered.filter(function(v){
     if (v.model.toLowerCase().indexOf(q) !== -1) return true;
     if (v.plate.toLowerCase().indexOf(q) !== -1) return true;
