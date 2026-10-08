@@ -924,7 +924,7 @@ document.addEventListener('click', function(e){
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
-var SECTION_LABELS = { hero:'Accueil', primes:'Primes', hornys:"Horny's & Tarifs", infos:'Infos service', fleet:'Flotte', team:'Équipe' };
+var SECTION_LABELS = { hero:'Accueil', stats:'Chiffres', primes:'Primes', hornys:"Horny's & Tarifs", services:'Services', infos:'Infos service', fleet:'Flotte', team:'Équipe', avis:'Avis' };
 function setupScrollSpy(){
   var sections = $$('[data-section]');
   var hud = $('#hudSection');
@@ -1087,15 +1087,15 @@ function setupVehicleModal(){
   });
 }
 function openVehicleModal(plate){
-  var v = findVehicleByPlate(plate); if (!v) return;
-  var driver = getEmployeeForVehicle(plate);
-  var dh = driver
-    ? '<div class="vmodal__driver"><div class="av">' + esc(initials(driver)) + '</div><div><small>Chauffeur attitré</small><b>' + esc(driver) + '</b></div></div>'
-    : '<div class="vmodal__driver unassigned"><div class="av">—</div><div><small>Chauffeur</small><b>Non attribué</b></div></div>';
-  var root = document.getElementById('modalRoot'); if (!root) return;
-  var el = document.createElement('div');
-  el.className = 'vmodal';
-  el.innerHTML = '<div class="vmodal__c"><button class="vmodal__close" type="button">✕</button><div class="vmodal__media">' + TAXI_SVG + '</div><div class="vmodal__cat">' + esc(CATS[v.cat] || v.cat) + '</div><h3 class="vmodal__name">' + esc(v.model) + '</h3><div class="vmodal__plate">' + esc(v.plate) + '</div><dl class="vmodal__rows"><div class="vmodal__row"><dt>Référence</dt><dd>' + esc(v.ref) + '</dd></div><div class="vmodal__row"><dt>Catégorie</dt><dd>' + esc(CATS[v.cat] || v.cat) + '</dd></div><div class="vmodal__row"><dt>Stand</dt><dd>Tangerine Street</dd></div></dl>' + dh + '</div>';
+  grid.innerHTML = filtered.map(function(v){
+    var driver = getEmployeeForVehicle(v.plate);
+    var statusClass = driver ? 'assigned' : 'free';
+    var statusLabel = driver ? 'Pris' : 'Libre';
+    var dh = driver
+      ? '<span class="vcard-driver"><span class="vcard-driver-av online">' + esc(initials(driver)) + '</span>' + esc(driver) + '</span>'
+      : '<span class="vcard-driver unassigned">Non attribué</span>';
+    return '<div class="vcard"><div class="vcard__status ' + statusClass + '">' + statusLabel + '</div><div class="vcard-top"><span class="vcard-cat">' + esc(CATS[v.cat] || v.cat) + '</span><span class="vcard-num">' + esc(v.ref) + '</span></div><div class="vcard-media">' + TAXI_SVG + '</div><div class="vcard-name">' + esc(v.model) + '</div><span class="vcard-plate">' + esc(v.plate) + '</span>' + dh + '</div>';
+  }).join('');
   root.appendChild(el);
   function close(){ if (el.parentNode) el.parentNode.removeChild(el); }
   el.querySelector('.vmodal__close').addEventListener('click', close);
@@ -1119,6 +1119,116 @@ function showKeyboardHelp(){
   function close(){ if (el.parentNode) el.parentNode.removeChild(el); }
   el.addEventListener('click', function(e){ if (e.target === el) close(); });
   document.addEventListener('keydown', function escFn(e){ if (e.key === 'Escape'){ close(); document.removeEventListener('keydown', escFn); } });
+}
+
+/* ═══ AMÉLIORATIONS v4.0 ═══ */
+function setupCountersV4(){
+  var els = document.querySelectorAll('[data-counter]');
+  if (!els.length || !('IntersectionObserver' in window)) return;
+  var io = new IntersectionObserver(function(entries, obs){
+    entries.forEach(function(entry){
+      if (!entry.isIntersecting) return;
+      var el = entry.target;
+      var target = parseInt(el.getAttribute('data-counter'), 10) || 0;
+      var suffix = el.getAttribute('data-suffix') || '';
+      var start = performance.now();
+      function tick(now){
+        var t = Math.min(1, (now - start) / 1600);
+        var eased = 1 - Math.pow(1 - t, 3);
+        el.textContent = Math.round(target * eased) + suffix;
+        if (t < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+      obs.unobserve(el);
+    });
+  }, { threshold: 0.5 });
+  for (var i = 0; i < els.length; i++) io.observe(els[i]);
+}
+
+function setupRating(){
+  var KEY = 'td-rating';
+  var input = document.getElementById('ratingInput');
+  if (!input) return;
+  var stars = input.querySelectorAll('.rating-star');
+  var avgEl = document.getElementById('ratingAvg');
+  var avgStarsEl = document.getElementById('ratingAvgStars');
+  var avgCountEl = document.getElementById('ratingAvgCount');
+  var msgEl = document.getElementById('ratingMsg');
+
+  function getRatings(){
+    try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch(e){ return []; }
+  }
+  function setRatings(arr){
+    try { localStorage.setItem(KEY, JSON.stringify(arr)); } catch(e){}
+  }
+  function getSessionId(){
+    var sid = sessionStorage.getItem('td-sid');
+    if (!sid){ sid = 's-' + Date.now() + '-' + Math.random().toString(36).slice(2,6); sessionStorage.setItem('td-sid', sid); }
+    return sid;
+  }
+  function renderAverage(){
+    var list = getRatings();
+    if (!list.length){
+      if (avgEl) avgEl.textContent = '—';
+      if (avgCountEl) avgCountEl.textContent = 'Aucun avis';
+      if (avgStarsEl) avgStarsEl.innerHTML = '';
+      return;
+    }
+    var sum = list.reduce(function(s, r){ return s + r.stars; }, 0);
+    var avg = sum / list.length;
+    if (avgEl) avgEl.textContent = avg.toFixed(1);
+    if (avgCountEl) avgCountEl.textContent = list.length + ' avis';
+    if (avgStarsEl){
+      var html = '';
+      for (var i = 1; i <= 5; i++){
+        var color = i <= Math.round(avg) ? 'var(--warn)' : 'var(--line-4)';
+        html += '<svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:' + color + '"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+      }
+      avgStarsEl.innerHTML = html;
+    }
+  }
+  function hasRated(){
+    var list = getRatings();
+    var sid = getSessionId();
+    return list.some(function(r){ return r.sid === sid; });
+  }
+  function markStars(value){
+    for (var i = 0; i < stars.length; i++){
+      var v = parseInt(stars[i].getAttribute('data-value'), 10);
+      if (v <= value) stars[i].classList.add('selected');
+      else stars[i].classList.remove('selected');
+    }
+  }
+  for (var i = 0; i < stars.length; i++){
+    (function(star){
+      star.addEventListener('mouseenter', function(){
+        var v = parseInt(star.getAttribute('data-value'), 10);
+        for (var j = 0; j < stars.length; j++){
+          var sv = parseInt(stars[j].getAttribute('data-value'), 10);
+          if (sv <= v) stars[j].classList.add('hovered');
+          else stars[j].classList.remove('hovered');
+        }
+      });
+      star.addEventListener('mouseleave', function(){
+        for (var j = 0; j < stars.length; j++) stars[j].classList.remove('hovered');
+      });
+      star.addEventListener('click', function(){
+        if (hasRated()){
+          if (msgEl){ msgEl.style.color = 'var(--warn)'; msgEl.textContent = 'Tu as déjà noté !'; }
+          return;
+        }
+        var v = parseInt(star.getAttribute('data-value'), 10);
+        var list = getRatings();
+        list.push({ stars: v, sid: getSessionId(), ts: Date.now() });
+        setRatings(list);
+        markStars(v);
+        renderAverage();
+        if (msgEl){ msgEl.style.color = 'var(--green)'; msgEl.textContent = '✓ Merci pour ta note ' + v + '★'; }
+      });
+    })(stars[i]);
+  }
+  if (hasRated()) markStars(5);
+  renderAverage();
 }
 
 /* ═══ INIT ═══ */
@@ -1183,12 +1293,14 @@ function init(){
         if (pct) pct.textContent = n;
       }, 80);
 
-      setupScrollProgress();
+setupScrollProgress();
       setupHornysCalc();
       setupServiceChecklist();
       setupCountdown();
       setupVehicleModal();
       setupKeyboardShortcuts();
+      setupCountersV4();
+      setupRating();
 
       console.log('[TD] ✅ Sync OK —', WORKER_CONFIGURED ? 'Worker actif' : 'Mode local');
     });
