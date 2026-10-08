@@ -347,7 +347,7 @@ html[data-theme="light"] .s-hero{background-color:#e8e8ee}
 .pcard__info{min-width:0;flex:1}
 .pcard__info b{display:block;font-size:14px;font-weight:600;line-height:1.25;color:var(--ink-1)}
 .pcard__info span{font-family:var(--f-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3)}
-.pcard__plate{display:inline-block;margin-top:4px;font-family:var(--f-mono);font-size:10px;letter-spacing:.16em;color:var(--accent);padding:2px 6px;border:1px solid var(--accent);border-radius:3px}
+.pcard__plate{display:inline-block;margin-top:4px;margin-right:4px;font-family:var(--f-mono);font-size:10px;letter-spacing:.16em;color:var(--accent);padding:2px 6px;border:1px solid var(--accent);border-radius:3px}
 
 /* ═══ FOOTER ═══ */
 .footer{padding:60px var(--pad-x) 60px;padding-bottom:calc(60px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line-1);background:linear-gradient(180deg,transparent,rgba(10,10,13,.6));position:relative;z-index:1}
