@@ -1,15 +1,14 @@
 /* ═══════════════════════════════════════════════════════════
-   TAXI DOWNTOWN · Script principal — v2.1 (debogué)
+   TAXI DOWNTOWN · Script principal — v2.3
    ═══════════════════════════════════════════════════════════ */
 
 (function(){
 'use strict';
 
-/* ═══ CONFIG WORKER ═══ */
+/* ═══ CONFIG ═══ */
 var WORKER_URL = 'https://taxi-downtown.yassinetrepaud6.workers.dev/';
 var WORKER_CONFIGURED = !!(WORKER_URL && WORKER_URL.indexOf('https://') === 0 && WORKER_URL.indexOf('TON-PSEUDO') === -1);
 
-/* ═══ CODE ADMIN OBFUSQUÉ (XOR 0x1F sur "DOWNTOWN26") ═══ */
 var _K = [0x5b,0x50,0x48,0x51,0x4b,0x50,0x48,0x51,0x2d,0x29];
 var ADMIN_CODE = String.fromCharCode.apply(null, _K.map(function(c){ return c ^ 0x1F; }));
 
@@ -56,7 +55,7 @@ var LS = {
   set: function(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
 };
 
-/* ═══ STATE ═══ */
+/* ═══ STATE (avec 10 attributions par défaut) ═══ */
 var STATE = LS.get('td-state', null) || {
   invoices: [],
   employees: [],
@@ -66,11 +65,12 @@ var STATE = LS.get('td-state', null) || {
     'CJ8249YD': 'Noah Dupont',
     'BX5408WL': 'Arthur Bendal',
     'FD3839EL': 'Maxime Rivière',
-    'BP5989FB': 'Sacha Mermoud',
+    'YP7603HL': 'Sacha Mermoud',
     'LX4255HP': 'Sofian Badhaoui',
     'WN5307RY': 'Jimy Smith',
     'JZ0498AE': 'Sam Le Gros',
-    'DC3624SY': 'Romeo Cali'
+    'DC3624SY': 'Romeo Cali',
+    'RM1393GV': 'Filou Pepito'
   },
   history: [],
   baseOverrides: {},
@@ -82,19 +82,14 @@ var STATE = LS.get('td-state', null) || {
 if (!STATE.assignments || typeof STATE.assignments !== 'object') STATE.assignments = {};
 if (!STATE.baseOverrides || typeof STATE.baseOverrides !== 'object') STATE.baseOverrides = {};
 
-/* ═══ SAUVEGARDES AUTOMATIQUES ═══ */
+/* ═══ BACKUPS ═══ */
 var BACKUPS_KEY = 'td-backups';
 var MAX_BACKUPS = 10;
 var _previousSnapshot = null;
 var _skipBackupOnce = false;
 
-function getBackups(){
-  try { return JSON.parse(localStorage.getItem(BACKUPS_KEY) || '[]'); }
-  catch(e){ return []; }
-}
-function setBackups(arr){
-  try { localStorage.setItem(BACKUPS_KEY, JSON.stringify(arr)); } catch(e){}
-}
+function getBackups(){ try { return JSON.parse(localStorage.getItem(BACKUPS_KEY) || '[]'); } catch(e){ return []; } }
+function setBackups(arr){ try { localStorage.setItem(BACKUPS_KEY, JSON.stringify(arr)); } catch(e){} }
 function captureSnapshot(){
   return {
     invoices: JSON.parse(JSON.stringify(STATE.invoices || [])),
@@ -108,9 +103,7 @@ function captureSnapshot(){
 function createBackup(label){
   var current = captureSnapshot();
   if (_previousSnapshot){
-    var a = JSON.stringify(_previousSnapshot);
-    var b = JSON.stringify(current);
-    if (a === b) return false;
+    if (JSON.stringify(_previousSnapshot) === JSON.stringify(current)) return false;
     var backups = getBackups();
     backups.unshift({
       id: 'bak-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
@@ -118,15 +111,13 @@ function createBackup(label){
       label: label || 'Modification',
       snapshot: _previousSnapshot
     });
-    backups = backups.slice(0, MAX_BACKUPS);
-    setBackups(backups);
+    setBackups(backups.slice(0, MAX_BACKUPS));
   }
   _previousSnapshot = current;
   return true;
 }
 function restoreBackup(id){
-  var backups = getBackups();
-  var b = backups.filter(function(x){ return x.id === id; })[0];
+  var b = getBackups().filter(function(x){ return x.id === id; })[0];
   if (!b) return false;
   _skipBackupOnce = true;
   STATE.invoices = JSON.parse(JSON.stringify(b.snapshot.invoices || []));
@@ -142,24 +133,13 @@ function restoreBackup(id){
   _previousSnapshot = captureSnapshot();
   return true;
 }
-function deleteBackup(id){
-  var backups = getBackups().filter(function(x){ return x.id !== id; });
-  setBackups(backups);
-}
-function clearAllBackups(){
-  setBackups([]);
-}
+function deleteBackup(id){ setBackups(getBackups().filter(function(x){ return x.id !== id; })); }
+function clearAllBackups(){ setBackups([]); }
 function manualBackup(){
-  var backups = getBackups();
   var snapshot = captureSnapshot();
-  backups.unshift({
-    id: 'bak-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
-    ts: Date.now(),
-    label: '📸 Sauvegarde manuelle',
-    snapshot: snapshot
-  });
-  backups = backups.slice(0, MAX_BACKUPS);
-  setBackups(backups);
+  var backups = getBackups();
+  backups.unshift({ id: 'bak-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6), ts: Date.now(), label: '📸 Sauvegarde manuelle', snapshot: snapshot });
+  setBackups(backups.slice(0, MAX_BACKUPS));
   _previousSnapshot = snapshot;
   toast('ok', 'Sauvegarde créée', 'État actuel enregistré.');
   renderAdminContent('parametres');
@@ -243,10 +223,8 @@ function saveState(){
   } else {
     _skipBackupOnce = false;
   }
-
   STATE.updatedAt = Date.now();
   LS.set('td-state', STATE);
-
   if (_saveDebounce) clearTimeout(_saveDebounce);
   _saveDebounce = setTimeout(function(){
     if (!WORKER_CONFIGURED) return;
@@ -261,13 +239,12 @@ function saveState(){
     });
   }, 400);
 }
-
 function logAction(action, by){
   STATE.history.unshift({ action: action, ts: Date.now(), by: by || 'Direction' });
   STATE.history = STATE.history.slice(0, 200);
 }
 
-/* ═══ EMPLOYÉS DE BASE ═══ */
+/* ═══ EMPLOYÉS DE BASE (13) ═══ */
 var BASE_EMPLOYEES = [
   { id:'base-1', name:'Jimy Smith', role:'Directeur', hiredAt: Date.now() - 30*86400000 },
   { id:'base-2', name:'Sam Le Gros', role:'Directeur Adjoint', hiredAt: Date.now() - 30*86400000 },
@@ -280,10 +257,11 @@ var BASE_EMPLOYEES = [
   { id:'base-9', name:'Arthur Bendal', role:'Novice', hiredAt: Date.now() - 8*86400000 },
   { id:'base-10', name:'Sacha Mermoud', role:'Novice', hiredAt: Date.now() - 5*86400000 },
   { id:'base-11', name:'Theo Roberto', role:'Novice', hiredAt: Date.now() - 5*86400000 },
-  { id:'base-12', name:'Sofian Badhaoui', role:'Novice', hiredAt: Date.now() - 3*86400000 }
+  { id:'base-12', name:'Sofian Badhaoui', role:'Novice', hiredAt: Date.now() - 3*86400000 },
+  { id:'base-13', name:'Filou Pepito', role:'Chauffeur Confirmé', hiredAt: Date.now() - 12*86400000 }
 ];
 
-/* ═══ FLOTTE DE BASE ═══ */
+/* ═══ FLOTTE DE BASE (20) ═══ */
 var BASE_FLEET = [
   { id:'td-001', model:'Taxi', plate:'RW4968NN', ref:'TD-001', cat:'standard' },
   { id:'td-002', model:'Taxi', plate:'XV7016ED', ref:'TD-002', cat:'standard' },
@@ -299,14 +277,13 @@ var BASE_FLEET = [
   { id:'td-012', model:'Taxi Argento 7F', plate:'CJ8249YD', ref:'TD-012', cat:'argento' },
   { id:'td-013', model:'Taxi Eon', plate:'BX5408WL', ref:'TD-013', cat:'eon' },
   { id:'td-014', model:'Taxi Eon', plate:'FD3839EL', ref:'TD-014', cat:'eon' },
-  { id:'td-015', model:'Taxi', plate:'BP5989FB', ref:'TD-015', cat:'standard' },
+  { id:'td-015', model:'Taxi', ( plate:'BP5989FB', ref:'TD-015', cat:'standard' },
   { id:'td-016', model:'Taxi Argento 7F', plate:'LX4255HP', ref:'TD-016', cat:'argento' },
   { id:'td-017', model:'Taxi Argento 7F', plate:'JZ0498AE', ref:'TD-017', cat:'argento' },
   { id:'td-018', model:'Taxi Argento 7F', plate:'DC3624SY', ref:'TD-018', cat:'argento' },
   { id:'td-019', model:'Stretch', plate:'NP5063XP', ref:'TD-019', cat:'stretch' },
   { id:'td-020', model:'Taxi Argento 7F', plate:'WN5307RY', ref:'TD-020', cat:'argento' }
 ];
-
 
 var CATS = { standard:'Standard', eon:'Eon', starlight:'Starlight', stanier:'Stanier LE', argento:'Argento 7F', stretch:'Stretch', custom:'Personnalisé' };
 var ROLES = ['Novice','Chauffeur Confirmé','Chauffeur Senior','Chef de service','Superviseur','Responsable CM','Directeur Adjoint','Directeur'];
@@ -346,24 +323,17 @@ function getFleet(){
     return { id: v.id, model: v.model, plate: v.plate, ref: v.ref || 'TD-NEW', cat: 'custom' };
   }));
 }
-function findEmployeeById(id){
-  return getAllEmployees().filter(function(e){ return e.id === id; })[0] || null;
-}
-function findEmployeeByName(name){
-  return getAllEmployees().filter(function(e){ return e.name === name; })[0] || null;
-}
-function findVehicleByPlate(plate){
-  return getFleet().filter(function(v){ return v.plate === plate; })[0] || null;
-}
+function findEmployeeById(id){ return getAllEmployees().filter(function(e){ return e.id === id; })[0] || null; }
+function findEmployeeByName(name){ return getAllEmployees().filter(function(e){ return e.name === name; })[0] || null; }
+function findVehicleByPlate(plate){ return getFleet().filter(function(v){ return v.plate === plate; })[0] || null; }
 function getVehicleForEmployee(name){
   var found = null;
   Object.keys(STATE.assignments).forEach(function(plate){
-    if (STATE.assignments[plate] === name) found = plate;
+    ifSTATE.assignments[plate] === name) found = plate;
   });
   return found;
 }
 function getEmployeeForVehicle(plate){ return STATE.assignments[plate] || null; }
-
 function updateEmployee(id, patch){
   var base = BASE_EMPLOYEES.filter(function(e){ return e.id === id; })[0];
   if (base){
@@ -506,8 +476,7 @@ function setHero(i){
   var pr = $('#heroPrice');
   if (pr){
     if (heroIdx === 0){
-      var f = getFleet().length, e = getActiveEmployees().length;
-      pr.textContent = f + ' véhicules · ' + e + ' chauffeurs';
+      pr.textContent = getFleet().length + ' véhicules · ' + getActiveEmployees().length + ' chauffeurs';
     } else {
       pr.textContent = line.price;
     }
@@ -651,7 +620,6 @@ function buildAdminHTML(activeTab){
     '<div class="tabs" id="adminTabs">' + tabsHTML + '</div>' +
     '<div class="panel" id="adminPanelRoot"></div>';
 }
-
 function renderAdminContent(tab){
   var root = $('#adminPanelRoot');
   if (!root) return;
@@ -665,7 +633,6 @@ function renderAdminContent(tab){
   bindPanelEvents(tab);
   updateAdminStats();
 }
-
 function updateAdminStats(){
   var el = $('#adminStats'); if (!el) return;
   el.textContent = getActiveEmployees().length + ' employés · ' + getFleet().length + ' véhicules · ' + Object.keys(STATE.assignments).length + ' attribués';
@@ -791,7 +758,6 @@ function buildPanelParametres(){
   var raw = JSON.stringify(STATE);
   var sizeKB = (raw.length / 1024).toFixed(1);
   var backups = getBackups();
-
   var backupListHTML = backups.length
     ? backups.map(function(b){
         var counts = '📄 ' + (b.snapshot.invoices || []).length +
@@ -808,14 +774,12 @@ function buildPanelParametres(){
           '</div></div>';
       }).join('')
     : '<div class="empty">Aucune sauvegarde pour le moment. Chaque action en créera automatiquement une.</div>';
-
   return '<div class="sec">Statistiques</div>' +
     '<div class="stats">' +
       '<div class="stat"><small>Factures</small><b>' + STATE.invoices.length + '</b></div>' +
       '<div class="stat"><small>Employés</small><b>' + getActiveEmployees().length + '</b></div>' +
       '<div class="stat"><small>Véhicules</small><b>' + getFleet().length + '</b></div>' +
       '<div class="stat"><small>Attributions</small><b>' + Object.keys(STATE.assignments).length + '</b></div></div>' +
-
     '<div class="sec">💾 Sauvegardes automatiques <small>' + backups.length + ' / ' + MAX_BACKUPS + '</small></div>' +
     '<p style="color:var(--ink-2);font-size:13px;margin-bottom:12px;line-height:1.6">' +
       'Une sauvegarde est créée <b>automatiquement avant chaque modification</b>. ' +
@@ -825,13 +789,11 @@ function buildPanelParametres(){
       (backups.length ? '<button type="button" class="danger" data-action="clear-backups">🗑️ Vider toutes les sauvegardes</button>' : '') +
     '</div>' +
     '<div class="list">' + backupListHTML + '</div>' +
-
     '<div class="sec">Export / Import manuel</div>' +
     '<div class="tools">' +
       '<button type="button" data-action="export-json">Export JSON</button>' +
       '<button type="button" data-action="export-csv">Export CSV</button>' +
       '<button type="button" data-action="import">Import</button></div>' +
-
     '<div class="sec">Zone dangereuse</div>' +
     '<p style="color:var(--ink-2);font-size:13px;margin-bottom:12px">Ces actions sont irréversibles.</p>' +
     '<div class="tools">' +
@@ -839,17 +801,13 @@ function buildPanelParametres(){
       '<button type="button" class="danger" data-action="clear-employees">Vider employés</button>' +
       '<button type="button" class="danger" data-action="clear-vehicles">Vider véhicules</button>' +
       '<button type="button" class="danger" data-action="clear-all">Tout effacer</button></div>' +
-
     '<div class="sec">Stockage</div>' +
     '<p style="color:var(--ink-3);font-family:var(--f-mono);font-size:11px;letter-spacing:.14em">' +
       sizeKB + ' Ko · ' + backups.length + ' sauvegarde(s)</p>';
 }
 
-/* ═══════════════════════════════════════════════════════════
-   BIND PANEL EVENTS — FONCTION MANQUANTE (bug corrigé)
-   ═══════════════════════════════════════════════════════════ */
+/* ═══ BIND PANEL EVENTS ═══ */
 function bindPanelEvents(tab){
-  /* ─── Ajouter véhicule ─── */
   var vf = $('#addVehicleForm');
   if (vf) vf.addEventListener('submit', function(e){
     e.preventDefault();
@@ -868,7 +826,6 @@ function bindPanelEvents(tab){
     renderAllPublic();
   });
 
-  /* ─── Supprimer véhicule ─── */
   $$('[data-del-vehicle]').forEach(function(btn){
     btn.addEventListener('click', function(){
       var id = btn.dataset.delVehicle;
@@ -887,7 +844,6 @@ function bindPanelEvents(tab){
     });
   });
 
-  /* ─── Ajouter employé ─── */
   var ef = $('#addEmployeeForm');
   if (ef) ef.addEventListener('submit', function(e){
     e.preventDefault();
@@ -906,7 +862,6 @@ function bindPanelEvents(tab){
     renderAllPublic();
   });
 
-  /* ─── Actions employé (fire, rehire, change-role, sanction) ─── */
   $$('[data-act]').forEach(function(btn){
     btn.addEventListener('click', function(){
       var act = btn.dataset.act;
@@ -927,7 +882,6 @@ function bindPanelEvents(tab){
     });
   });
 
-  /* ─── Attribuer véhicule ─── */
   var af = $('#assignForm');
   if (af) af.addEventListener('submit', function(e){
     e.preventDefault();
@@ -942,7 +896,6 @@ function bindPanelEvents(tab){
     renderAllPublic();
   });
 
-  /* ─── Retirer attribution ─── */
   $$('[data-unassign]').forEach(function(btn){
     btn.addEventListener('click', function(){
       var plate = btn.dataset.unassign;
@@ -959,7 +912,6 @@ function bindPanelEvents(tab){
     });
   });
 
-  /* ─── Actions globales (boutons data-action) ─── */
   $$('[data-action]').forEach(function(btn){
     btn.addEventListener('click', function(){
       var act = btn.dataset.action;
@@ -978,7 +930,6 @@ function bindPanelEvents(tab){
     });
   });
 
-  /* ─── Restaurer une sauvegarde ─── */
   $$('[data-restore]').forEach(function(btn){
     btn.addEventListener('click', function(){
       var id = btn.dataset.restore;
@@ -997,23 +948,15 @@ function bindPanelEvents(tab){
     });
   });
 
-  /* ─── Télécharger une sauvegarde ─── */
   $$('[data-download-backup]').forEach(function(btn){
     btn.addEventListener('click', function(){
       var id = btn.dataset.downloadBackup;
       var b = getBackups().filter(function(x){ return x.id === id; })[0];
       if (!b) return;
-      var data = {
-        label: b.label,
-        ts: b.ts,
-        date: new Date(b.ts).toISOString(),
-        invoices: b.snapshot.invoices || [],
-        employees: b.snapshot.employees || [],
-        vehicles: b.snapshot.vehicles || [],
-        assignments: b.snapshot.assignments || {},
-        history: b.snapshot.history || [],
-        baseOverrides: b.snapshot.baseOverrides || {}
-      };
+      var data = { label: b.label, ts: b.ts, date: new Date(b.ts).toISOString(),
+        invoices: b.snapshot.invoices || [], employees: b.snapshot.employees || [],
+        vehicles: b.snapshot.vehicles || [], assignments: b.snapshot.assignments || {},
+        history: b.snapshot.history || [], baseOverrides: b.snapshot.baseOverrides || {} };
       var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       var a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
@@ -1024,7 +967,6 @@ function bindPanelEvents(tab){
     });
   });
 
-  /* ─── Supprimer une sauvegarde ─── */
   $$('[data-del-backup]').forEach(function(btn){
     btn.addEventListener('click', function(){
       var id = btn.dataset.delBackup;
@@ -1141,12 +1083,9 @@ function openSanctionModal(emp){
 
 /* ═══ ACTIONS GLOBALES ═══ */
 function exportJSON(){
-  var data = {
-    invoices: STATE.invoices, employees: STATE.employees, vehicles: STATE.vehicles,
-    assignments: STATE.assignments, history: STATE.history,
-    baseOverrides: STATE.baseOverrides,
-    exportedAt: new Date().toISOString(), version: 2
-  };
+  var data = { invoices: STATE.invoices, employees: STATE.employees, vehicles: STATE.vehicles,
+    assignments: STATE.assignments, history: STATE.history, baseOverrides: STATE.baseOverrides,
+    exportedAt: new Date().toISOString(), version: 3 };
   var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -1330,7 +1269,6 @@ function isAdminSessionValid(){
 function setAdminSession(){
   sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({ expiresAt: Date.now() + ADMIN_SESSION_DURATION }));
 }
-
 function openLoginModal(){
   closeTopModal();
   var html = '<button class="modal__x" type="button" id="loginClose">✕</button>' +
@@ -1366,7 +1304,7 @@ function openLoginModal(){
   setTimeout(function(){ if (input) input.focus(); }, 100);
 }
 
-/* ═══ MENU ═══ */
+/* ═══ MENU / SCROLL / THEME ═══ */
 function setupMenu(){
   var btn = $('#menuBtn'), menu = $('#menu');
   if (!btn || !menu) return;
@@ -1391,7 +1329,6 @@ function setupMenu(){
   });
 }
 
-/* ═══ SMOOTH SCROLL ═══ */
 document.addEventListener('click', function(e){
   var link = e.target.closest ? e.target.closest('[data-scroll]') : null;
   if (!link) return;
@@ -1402,14 +1339,9 @@ document.addEventListener('click', function(e){
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
-/* ═══ SCROLL SPY ═══ */
 var SECTION_LABELS = {
-  hero:'Accueil',
-  primes:'Primes',
-  hornys:"Horny's & Tarifs",
-  infos:'Infos service',
-  fleet:'Flotte',
-  team:'Équipe'
+  hero:'Accueil', primes:'Primes', hornys:"Horny's & Tarifs",
+  infos:'Infos service', fleet:'Flotte', team:'Équipe'
 };
 function setupScrollSpy(){
   var sections = $$('[data-section]');
@@ -1432,7 +1364,6 @@ function setupScrollSpy(){
   if (t) t.addEventListener('click', function(){ window.scrollTo({ top: 0, behavior: 'smooth' }); });
 }
 
-/* ═══ THEME ═══ */
 function applyTheme(theme){
   if (['dark','light','halloween'].indexOf(theme) === -1) theme = 'dark';
   document.documentElement.setAttribute('data-theme', theme);
@@ -1450,7 +1381,6 @@ function setupTheme(){
   });
 }
 
-/* ═══ ADMIN TRIGGER ═══ */
 function setupAdminTrigger(){
   var trigger = $('#adminTrigger');
   if (!trigger) return;
@@ -1478,7 +1408,6 @@ function setupAdminTrigger(){
   });
 }
 
-/* ═══ RECHERCHE FLOTTE ═══ */
 function setupFleetSearch(){
   var input = $('#fleetSearch'); if (!input) return;
   var d = null;
@@ -1488,7 +1417,6 @@ function setupFleetSearch(){
   });
 }
 
-/* ═══ MIGRATION ancien format ═══ */
 function migrateOldStorage(){
   if (LS.get('td-state') !== null) return;
   var oldInvoices = LS.get('td-custom-invoices', []);
@@ -1505,12 +1433,10 @@ function migrateOldStorage(){
     });
     STATE.assignments = oldAssignments || {};
     saveState();
-    console.log('[TD] Migration ancien format OK');
   }
 }
 
 /* ═══ AMÉLIORATIONS v2.2 ═══ */
-
 function setupScrollProgress(){
   var bar = document.getElementById('scrollProgress');
   if (!bar) return;
@@ -1691,7 +1617,6 @@ function showKeyboardHelp(){
 function setupInstallPrompt(){
   window.addEventListener('beforeinstallprompt', function(e){
     e.preventDefault();
-    // prompt basique — pas de UI complexe pour éviter bugs
   });
 }
 
@@ -1770,7 +1695,6 @@ function init(){
         if (pct) pct.textContent = n;
       }, 80);
 
-      console.log('[TD] ✅ Sync OK —', WORKER_CONFIGURED ? 'Worker actif' : 'Mode local');
       setupScrollProgress();
       setupHornysCalc();
       setupServiceChecklist();
@@ -1778,6 +1702,8 @@ function init(){
       setupVehicleModal();
       setupKeyboardShortcuts();
       setupInstallPrompt();
+
+      console.log('[TD] ✅ Sync OK —', WORKER_CONFIGURED ? 'Worker actif' : 'Mode local');
     });
 
   } catch(err){
