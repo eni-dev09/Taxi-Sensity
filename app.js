@@ -35,12 +35,12 @@ var STATE = LS.get('td-state', null) || {
     'YP7603HL': 'Sacha Mermoud',
     'LX4255HP': 'Sofian Badhaoui',
     'RM1393GV': 'Filou Pepito',
-    'DC3624SY': 'Romeo Cali',
-    'DIR0001': 'Jimy Smith',
-    'DIR0002': 'Sam Le Gros',
-    'DIR0003': 'Romeo Cali'
-    'JZ0498AE': 'Sam Le Gros',
     'WN5307RY': 'Jimy Smith',
+    'DIR0001': 'Jimy Smith',
+    'JZ0498AE': 'Sam Le Gros',
+    'DIR0002': 'Sam Le Gros',
+    'DC3624SY': 'Romeo Cali',
+    'DIR0003': 'Romeo Cali'
   },
   history: [],
   baseOverrides: {},
@@ -251,8 +251,14 @@ function sanctionEmployee(id, level, reason){
 }
 function assignVehicle(plate, name){
   if (!safeKey(plate)) return;
-  Object.keys(STATE.assignments).forEach(function(p){ if (STATE.assignments[p] === name) delete STATE.assignments[p]; });
   STATE.assignments[plate] = name;
+}
+function getVehiclesForEmployee(name){
+  var arr = [];
+  Object.keys(STATE.assignments).forEach(function(plate){
+    if (STATE.assignments[plate] === name) arr.push(plate);
+  });
+  return arr;
 }
 function unassignVehicle(plate){ if (safeKey(plate)) delete STATE.assignments[plate]; }
 
@@ -441,8 +447,9 @@ function renderTeam(){
     return '<div class="tcard ' + (i === 0 ? 'highlight' : '') + '"><span class="tcard__num">' + String(i + 1).padStart(2, '0') + '</span><div class="tcard__role">' + esc(e.role) + '</div><h3 class="tcard__name">' + esc(e.name) + '</h3></div>';
   }).join('') || '<div class="tcard"><div class="tcard__role">Direction</div><h3 class="tcard__name">—</h3></div>';
   rest.innerHTML = drv.map(function(e){
-    var plate = getVehicleForEmployee(e.name);
-    return '<div class="pcard"><div class="pcard__av online">' + esc(initials(e.name)) + '</div><div class="pcard__info"><b>' + esc(e.name) + '</b><span>' + esc(e.role) + '</span>' + (plate ? '<span class="pcard__plate">' + esc(plate) + '</span>' : '') + '</div></div>';
+    var plates = getVehiclesForEmployee(e.name);
+    var platesHTML = plates.map(function(p){ return '<span class="pcard__plate">' + esc(p) + '</span>'; }).join(' ');
+    return '<div class="pcard"><div class="pcard__av online">' + esc(initials(e.name)) + '</div><div class="pcard__info"><b>' + esc(e.name) + '</b><span>' + esc(e.role) + '</span>' + platesHTML + '</div></div>';
   }).join('') || '<div class="pcard"><div class="pcard__info"><b>Aucun chauffeur</b><span>Recrutement ouvert</span></div></div>';
 }
 function renderTarifs(){
@@ -491,7 +498,8 @@ function buildPanelEmployes(){
   var fired = getFiredEmployees();
   function card(e){
     var isFired = !!e.firedAt;
-    var plate = getVehicleForEmployee(e.name);
+    var plates = getVehiclesForEmployee(e.name);
+    var plate = plates.length ? plates.join(', ') : null;
     var sanc = e.sanctions || [];
     var badges = sanc.slice(-3).map(function(s){ return '<span class="tag ' + (s.level === 3 ? 'tag--red' : 'tag--warn') + '">Avert. ' + s.level + '</span>'; }).join(' ');
     return '<div class="item ' + (isFired ? 'item--fired' : '') + '"><div class="item__av">' + esc(initials(e.name)) + '</div><div class="item__body"><b>' + esc(e.name) + '</b><small>' + esc(e.role) + (plate ? ' · ' + esc(plate) : ' · aucun véhicule') + '</small>' + (isFired ? '<span class="tag tag--red">Viré · ' + esc(e.firedReason || 'N/A') + '</span>' : '') + (badges ? ' ' + badges : '') + '</div><div class="item__meta">' + (e.hiredAt ? ago(e.hiredAt) : '—') + '</div><div class="item__btns">' + (isFired ? '<button type="button" class="item__btn item__btn--ok" data-act="rehire" data-id="' + esc(e.id) + '">Réembaucher</button>' : '<button type="button" class="item__btn" data-act="change-role" data-id="' + esc(e.id) + '">Rôle</button><button type="button" class="item__btn item__btn--warn" data-act="sanction" data-id="' + esc(e.id) + '">Sanction</button><button type="button" class="item__btn item__btn--danger" data-act="fire" data-id="' + esc(e.id) + '">Virer</button>') + '</div></div>';
@@ -504,8 +512,9 @@ function buildPanelAttributions(){
   var assign = STATE.assignments;
   var cnt = Object.keys(assign).length;
   var empOpt = act.map(function(e){
-    var p = getVehicleForEmployee(e.name);
-    return '<option value="' + esc(e.name) + '">' + esc(e.name) + ' · ' + esc(e.role) + (p ? ' (a ' + p + ')' : '') + '</option>';
+    var ps = getVehiclesForEmployee(e.name);
+    var suffix = ps.length ? ' (' + ps.join(', ') + ')' : '';
+    return '<option value="' + esc(e.name) + '">' + esc(e.name) + ' · ' + esc(e.role) + suffix + '</option>';
   }).join('');
   var vehOpt = fleet.map(function(v){ return '<option value="' + esc(v.plate) + '">' + esc(v.plate) + ' · ' + esc(v.model) + '</option>'; }).join('');
   var listHTML = cnt
