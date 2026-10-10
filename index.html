@@ -4,13 +4,88 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#050506">
-<title>Taxi Downtown · Sensity RP</title>
-<meta name="description" content="Taxi Downtown, Sensity RP. Flotte, équipe, tarifs et primes.">
-<link rel="icon" href="https://files.catbox.moe/nl7txj.png">
+<meta name="color-scheme" content="dark light">
+
+<!-- ═══ SEO ═══ -->
+<title>Taxi Downtown · Sensity RP — Compagnie de taxi à Los Santos</title>
+<meta name="description" content="Taxi Downtown, la compagnie de taxi de référence sur Sensity RP. Flotte premium, chauffeurs gradés, service 24/7 à Tangerine Street, Los Santos. Radio 17 Hz.">
+<meta name="keywords" content="Taxi, Downtown, Sensity RP, Los Santos, GTA RP, compagnie taxi, Tangerine Street">
+<meta name="author" content="Taxi Downtown">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://taxi-sensity.vercel.app/">
+
+<!-- ═══ OPEN GRAPH ═══ -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Taxi Downtown">
+<meta property="og:title" content="Taxi Downtown · Sensity RP">
+<meta property="og:description" content="La compagnie de taxi de référence sur Sensity RP. Flotte, équipe, tarifs et primes.">
+<meta property="og:image" content="https://files.catbox.moe/nl7txj.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://taxi-sensity.vercel.app/">
+<meta property="og:locale" content="fr_FR">
+
+<!-- ═══ TWITTER ═══ -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Taxi Downtown · Sensity RP">
+<meta name="twitter:description" content="La compagnie de taxi de référence sur Sensity RP.">
+<meta name="twitter:image" content="https://files.catbox.moe/nl7txj.png">
+
+<!-- ═══ PWA / MOBILE ═══ -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Taxi Downtown">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+<meta name="msapplication-TileColor" content="#a78bfa">
+
+<!-- ═══ ICONS ═══ -->
+<link rel="icon" href="https://files.catbox.moe/nl7txj.png" type="image/png">
+<link rel="apple-touch-icon" href="https://files.catbox.moe/nl7txj.png">
+<link rel="mask-icon" href="https://files.catbox.moe/nl7txj.png" color="#a78bfa">
+
+<!-- ═══ PERF : PRECONNECT / PRELOAD ═══ -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://files.catbox.moe">
+<link rel="dns-prefetch" href="https://api.jsonbin.io">
+<link rel="preload" as="image" href="https://files.catbox.moe/nl7txj.png">
+
+<!-- ═══ FONTS ═══ -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800&family=Permanent+Marker&display=swap">
+
+<!-- ═══ STYLES ═══ -->
 <link rel="stylesheet" href="style.css">
+
+<!-- ═══ JSON-LD : RICH SNIPPETS GOOGLE ═══ -->
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"TaxiService",
+  "name":"Taxi Downtown",
+  "description":"Compagnie de taxi de référence sur Sensity RP. Service 24/7 à Los Santos.",
+  "image":"https://files.catbox.moe/nl7txj.png",
+  "url":"https://taxi-sensity.vercel.app/",
+  "areaServed":{
+    "@type":"City",
+    "name":"Los Santos"
+  },
+  "address":{
+    "@type":"PostalAddress",
+    "streetAddress":"Tangerine Street",
+    "addressLocality":"Los Santos"
+  },
+  "openingHours":"Mo-Su 00:00-23:59",
+  "availableLanguage":["fr"],
+  "priceRange":"$",
+  "provider":{
+    "@type":"Organization",
+    "name":"Sensity RP"
+  }
+}
+</script>
+
+<!-- ═══ WATCHDOG LOADER ═══ -->
 <script>
 setTimeout(function(){
   var l = document.getElementById('loader');
@@ -24,9 +99,12 @@ setTimeout(function(){
 </head>
 <body class="is-loading">
 
-<div class="scroll-progress" id="scrollProgress"><i></i></div>
+<!-- ═══ SKIP LINK (a11y clavier) ═══ -->
+<a class="skip-link" href="#main">Aller au contenu principal</a>
 
-<div class="loader" id="loader">
+<div class="scroll-progress" id="scrollProgress" aria-hidden="true"><i></i></div>
+
+<div class="loader" id="loader" aria-hidden="true">
   <img src="https://files.catbox.moe/nl7txj.png" alt="" onerror="this.style.display='none'">
   <div class="bar"><i id="loaderBar"></i></div>
   <p><span id="loaderPct">0</span>% — Chargement</p>
@@ -35,29 +113,31 @@ setTimeout(function(){
 <div class="aurora" aria-hidden="true"><i class="a1"></i><i class="a2"></i><i class="a3"></i></div>
 <div class="toast-stack" id="toastStack" aria-live="polite"></div>
 
-<header class="nav">
+<!-- ═══ HEADER ═══ -->
+<header class="nav" role="banner">
   <div class="nav__left"></div>
-  <a class="nav__logo" href="#top" data-scroll="top" aria-label="Taxi Downtown">
-    <img src="https://files.catbox.moe/nl7txj.png" alt="Logo" width="52" height="52">
+  <a class="nav__logo" href="#top" data-scroll="top" aria-label="Retour à l'accueil de Taxi Downtown">
+    <img src="https://files.catbox.moe/nl7txj.png" alt="Logo Taxi Downtown" width="52" height="52" loading="eager">
   </a>
   <div class="nav__right">
-    <button class="nav__icon" id="themeBtn" type="button" aria-label="Thème" title="Changer de thème">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+    <button class="nav__icon" id="themeBtn" type="button" aria-label="Changer de thème" title="Changer de thème">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
     </button>
     <a class="btn btn--sm btn--ghost" href="#infos" data-scroll="infos">Nous joindre</a>
-    <button class="nav__menu" id="menuBtn" type="button" aria-expanded="false">
+    <button class="nav__menu" id="menuBtn" type="button" aria-expanded="false" aria-controls="menu" aria-label="Ouvrir le menu">
       <span>Menu</span>
-      <span class="bars"><i></i><i></i><i></i></span>
+      <span class="bars" aria-hidden="true"><i></i><i></i><i></i></span>
     </button>
   </div>
 </header>
 
-<nav class="menu" id="menu" hidden aria-label="Menu">
+<!-- ═══ MENU PLEIN ÉCRAN ═══ -->
+<nav class="menu" id="menu" hidden aria-label="Menu principal">
   <ul class="menu__links">
     <li><a href="#hero" data-scroll="hero"><small>01</small><span>Accueil</span></a></li>
     <li><a href="#stats" data-scroll="stats"><small>02</small><span>Chiffres</span></a></li>
     <li><a href="#primes" data-scroll="primes"><small>03</small><span>Primes</span></a></li>
-    <li><a href="#hornys" data-scroll="hornys"><small>04</small><span>Horny's & Tarifs</span></a></li>
+    <li><a href="#hornys" data-scroll="hornys"><small>04</small><span>Horny's &amp; Tarifs</span></a></li>
     <li><a href="#services" data-scroll="services"><small>05</small><span>Services</span></a></li>
     <li><a href="#infos" data-scroll="infos"><small>06</small><span>Infos service</span></a></li>
     <li><a href="#fleet" data-scroll="fleet"><small>07</small><span>Flotte</span></a></li>
@@ -67,12 +147,14 @@ setTimeout(function(){
   <div class="menu__side">
     <div><h4>Disponibilité</h4><p style="color:var(--ink-1)">24 h / 24 · 7 j / 7<br>Radio <b>17 Hz</b></p></div>
     <div><h4>Adresse</h4><p style="color:var(--ink-1)">Tangerine Street<br>Los Santos</p></div>
-    <p style="font-size:10px;color:var(--ink-3);letter-spacing:.2em;text-transform:uppercase">© <span data-year></span> Taxi Downtown</p>
+    <div><h4>Communauté</h4><p><a href="https://discord.gg/be8CdjzPna" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:underline">Rejoindre le Discord →</a></p></div>
+    <p class="menu__legal" style="font-size:10px;color:var(--ink-3);letter-spacing:.2em;text-transform:uppercase;margin-top:auto">© <span data-year></span> Taxi Downtown</p>
   </div>
 </nav>
 
+<!-- ═══ HUD ═══ -->
 <div class="hud" aria-hidden="true">
-  <div class="hud__tl"><b id="adminTrigger" tabindex="0">TD</b><span>Compagnie · Los Santos</span></div>
+  <div class="hud__tl" title="Cliquer 5× pour l'admin"><b id="adminTrigger" tabindex="0" role="button" aria-label="Accès administrateur">TD</b><span>Compagnie · Los Santos</span></div>
   <div class="hud__tr"><div class="hud__idx"><span id="hudIdx">01</span><small>/ 05</small></div><span id="hudCat">Accueil</span></div>
   <div class="hud__bl">
     <span><i class="dot"></i><b id="hudCount">23</b> véhicules</span>
@@ -84,13 +166,16 @@ setTimeout(function(){
   </div>
 </div>
 
-<button class="to-top" id="toTop" type="button" aria-label="Retour en haut"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+<button class="to-top" id="toTop" type="button" aria-label="Retour en haut de page">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
 
-<main class="main" id="main">
+<main class="main" id="main" role="main">
 
-<section class="s s-hero" id="hero" data-section="hero">
+<!-- ═══ 01 · HERO ═══ -->
+<section class="s s-hero" id="hero" data-section="hero" aria-label="Présentation">
   <div class="s__inner">
-    <h1 class="sr-only">Taxi Downtown · Sensity RP</h1>
+    <h1 class="sr-only">Taxi Downtown — Compagnie de taxi à Los Santos sur Sensity RP</h1>
     <div class="hero__grid">
       <div>
         <p class="eyebrow"><i></i>Compagnie · Sensity RP</p>
@@ -108,36 +193,41 @@ setTimeout(function(){
         </div>
       </div>
       <div class="hero__nav">
-        <div class="hero__pager" id="heroPager"><span class="hero__pager-dot" id="heroPagerDot"></span></div>
+        <div class="hero__pager" id="heroPager" role="tablist" aria-label="Choisir un thème de présentation"><span class="hero__pager-dot" id="heroPagerDot"></span></div>
         <div class="hero__arrows">
-          <button class="hero__arrow" id="heroPrev" type="button" aria-label="Précédent"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
-          <button class="hero__arrow" id="heroNext" type="button" aria-label="Suivant"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          <button class="hero__arrow" id="heroPrev" type="button" aria-label="Présentation précédente"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+          <button class="hero__arrow" id="heroNext" type="button" aria-label="Présentation suivante"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
         </div>
       </div>
     </div>
   </div>
+  <div class="hero__scroll" aria-hidden="true">
+    <span>SCROLL</span>
+    <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+  </div>
 </section>
 
-<section class="s s-stats" id="stats" data-section="stats">
+<!-- ═══ 02 · CHIFFRES CLÉS ═══ -->
+<section class="s s-stats" id="stats" data-section="stats" aria-label="Chiffres clés">
   <div class="s__inner">
     <div class="stats-hero">
       <div class="stat-hero">
-        <span class="stat-hero__icon">🚕</span>
+        <span class="stat-hero__icon" aria-hidden="true">🚕</span>
         <div class="stat-hero__num" data-counter="23">0</div>
         <div class="stat-hero__label">Véhicules</div>
       </div>
       <div class="stat-hero">
-        <span class="stat-hero__icon">👥</span>
+        <span class="stat-hero__icon" aria-hidden="true">👥</span>
         <div class="stat-hero__num" data-counter="12">0</div>
         <div class="stat-hero__label">Chauffeurs</div>
       </div>
       <div class="stat-hero">
-        <span class="stat-hero__icon">⏱</span>
+        <span class="stat-hero__icon" aria-hidden="true">⏱</span>
         <div class="stat-hero__num" data-counter="24" data-suffix="/7">0</div>
         <div class="stat-hero__label">Disponibilité</div>
       </div>
       <div class="stat-hero">
-        <span class="stat-hero__icon">⭐</span>
+        <span class="stat-hero__icon" aria-hidden="true">⭐</span>
         <div class="stat-hero__num" data-counter="100" data-suffix="%">0</div>
         <div class="stat-hero__label">Satisfaction</div>
       </div>
@@ -145,7 +235,8 @@ setTimeout(function(){
   </div>
 </section>
 
-<section class="s" id="primes" data-section="primes">
+<!-- ═══ 03 · PRIMES ═══ -->
+<section class="s" id="primes" data-section="primes" aria-label="Primes hebdomadaires">
   <div class="s__inner">
     <div style="margin-bottom:52px;max-width:820px">
       <p class="eyebrow"><i></i>Récompenses hebdomadaires</p>
@@ -153,7 +244,7 @@ setTimeout(function(){
     </div>
     <div class="countdown">
       <h4>⏱ Prochaine distribution des primes</h4>
-      <div class="countdown__timer">
+      <div class="countdown__timer" role="timer" aria-live="off">
         <div class="countdown__cell"><b id="cdDays">--</b><span>Jours</span></div>
         <div class="countdown__cell"><b id="cdHours">--</b><span>Heures</span></div>
         <div class="countdown__cell"><b id="cdMins">--</b><span>Min</span></div>
@@ -177,11 +268,12 @@ setTimeout(function(){
   </div>
 </section>
 
-<section class="s" id="hornys" data-section="hornys">
+<!-- ═══ 04 · HORNY'S & TARIFS ═══ -->
+<section class="s" id="hornys" data-section="hornys" aria-label="Partenariat Horny's et tarifs">
   <div class="s__inner">
     <div style="margin-bottom:52px;max-width:820px">
-      <p class="eyebrow"><i></i>Partenariat & Grille tarifaire</p>
-      <h2 class="display" style="font-size:clamp(44px,7vw,96px);margin:22px 0">Horny's <b>& Tarifs.</b></h2>
+      <p class="eyebrow"><i></i>Partenariat &amp; Grille tarifaire</p>
+      <h2 class="display" style="font-size:clamp(44px,7vw,96px);margin:22px 0">Horny's <b>&amp; Tarifs.</b></h2>
       <p style="color:var(--ink-2);font-size:15px;line-height:1.75;max-width:640px">Revente de menus à bord de nos taxis et grille officielle des courses.</p>
     </div>
     <div class="hornys-grid">
@@ -208,9 +300,9 @@ setTimeout(function(){
       <div class="calc__row">
         <label>Menus vendus</label>
         <div class="calc__btns">
-          <button class="calc__btn" data-calc="-" type="button">−</button>
-          <span class="calc__num" id="calcNum">5</span>
-          <button class="calc__btn" data-calc="+" type="button">+</button>
+          <button class="calc__btn" data-calc="-" type="button" aria-label="Diminuer">−</button>
+          <span class="calc__num" id="calcNum" aria-live="polite">5</span>
+          <button class="calc__btn" data-calc="+" type="button" aria-label="Augmenter">+</button>
         </div>
       </div>
       <div class="calc__results">
@@ -220,7 +312,7 @@ setTimeout(function(){
     </div>
     <div class="team__label" style="margin-top:70px">— Grille tarifaire officielle</div>
     <div class="tarif-grid">
-      <table class="tarif-table"><thead><tr><th>Zone</th><th>Tarif</th></tr></thead><tbody id="tarifBody"></tbody></table>
+      <table class="tarif-table" aria-label="Grille tarifaire"><thead><tr><th>Zone</th><th>Tarif</th></tr></thead><tbody id="tarifBody"></tbody></table>
       <aside class="tarif-note">
         <h4>Bon à savoir</h4>
         <p><b>En ville</b> : trajets intra-Los Santos.<br><b>Hors ville</b> : banlieue, Sandy Shores, Paleto Bay.<br><b>Cayo Perico</b> : île privée, tarif premium.<br><br><b>Nouveaux arrivants</b> : -50 % sur toutes les courses.</p>
@@ -230,7 +322,8 @@ setTimeout(function(){
   </div>
 </section>
 
-<section class="s" id="services" data-section="services">
+<!-- ═══ 05 · SERVICES ═══ -->
+<section class="s" id="services" data-section="services" aria-label="Nos services">
   <div class="s__inner">
     <div style="margin-bottom:52px;max-width:820px">
       <p class="eyebrow"><i></i>Ce qu'on propose</p>
@@ -240,7 +333,7 @@ setTimeout(function(){
     <div class="services">
       <div class="service">
         <span class="service__num">01</span>
-        <span class="service__icon">🚕</span>
+        <span class="service__icon" aria-hidden="true">🚕</span>
         <h3 class="service__title">Course Standard</h3>
         <p class="service__desc">Le service de base. Un chauffeur disponible 24/7 pour t'emmener où tu veux en ville.</p>
         <ul class="service__list">
@@ -252,19 +345,19 @@ setTimeout(function(){
       </div>
       <div class="service highlight">
         <span class="service__num">02</span>
-        <span class="service__icon">✨</span>
+        <span class="service__icon" aria-hidden="true">✨</span>
         <h3 class="service__title">Course Premium</h3>
         <p class="service__desc">Pour les VIP. Véhicules haut de gamme (Stretch, Stanier LE) et chauffeur dédié.</p>
         <ul class="service__list">
           <li><b>1 500 $ / km</b> hors ville</li>
-          <li>Stretch & Argento 7F</li>
+          <li>Stretch &amp; Argento 7F</li>
           <li>Chauffeurs gradés uniquement</li>
           <li>Service sur mesure</li>
         </ul>
       </div>
       <div class="service">
         <span class="service__num">03</span>
-        <span class="service__icon">🍔</span>
+        <span class="service__icon" aria-hidden="true">🍔</span>
         <h3 class="service__title">Livraison Horny's</h3>
         <p class="service__desc">Partenariat exclusif avec Horny's. Menus livrés à bord, prime directe pour le chauffeur.</p>
         <ul class="service__list">
@@ -278,40 +371,46 @@ setTimeout(function(){
   </div>
 </section>
 
-<section class="s" id="infos" data-section="infos">
+<!-- ═══ 06 · INFOS SERVICE ═══ -->
+<section class="s" id="infos" data-section="infos" aria-label="Informations pour la prise de service">
   <div class="s__inner">
     <div style="margin-bottom:52px;max-width:820px">
       <p class="eyebrow"><i></i>Avant de prendre le service</p>
       <h2 class="display" style="font-size:clamp(44px,7vw,96px);margin:22px 0">Infos en <b>service.</b></h2>
       <p style="color:var(--ink-2);font-size:15px;line-height:1.75;max-width:640px">Checklist rapide à suivre avant chaque prise de service. Clique sur chaque étape pour la valider.</p>
     </div>
-    <div class="checklist" id="serviceChecklist">
-      <div class="checklist__item" data-check="radio"><span class="checklist__box"></span><div class="checklist__text"><b>📻 Radio 17 Hz</b><small>Se connecter avant de partir</small></div></div>
-      <div class="checklist__item" data-check="tenue"><span class="checklist__box"></span><div class="checklist__text"><b>👔 Tenue de service</b><small>Uniforme complet + taxi vérifié</small></div></div>
-      <div class="checklist__item" data-check="stock"><span class="checklist__box"></span><div class="checklist__text"><b>🍔 5 menus Horny's</b><small>Stock avant la première course</small></div></div>
-      <div class="checklist__item" data-check="discord"><span class="checklist__box"></span><div class="checklist__text"><b>💬 Discord</b><small>Signaler la prise de service</small></div></div>
+    <div class="checklist" id="serviceChecklist" role="group" aria-label="Checklist de prise de service">
+      <div class="checklist__item" data-check="radio" role="checkbox" aria-checked="false" tabindex="0"><span class="checklist__box" aria-hidden="true"></span><div class="checklist__text"><b>📻 Radio 17 Hz</b><small>Se connecter avant de partir</small></div></div>
+      <div class="checklist__item" data-check="tenue" role="checkbox" aria-checked="false" tabindex="0"><span class="checklist__box" aria-hidden="true"></span><div class="checklist__text"><b>👔 Tenue de service</b><small>Uniforme complet + taxi vérifié</small></div></div>
+      <div class="checklist__item" data-check="stock" role="checkbox" aria-checked="false" tabindex="0"><span class="checklist__box" aria-hidden="true"></span><div class="checklist__text"><b>🍔 5 menus Horny's</b><small>Stock avant la première course</small></div></div>
+      <div class="checklist__item" data-check="discord" role="checkbox" aria-checked="false" tabindex="0"><span class="checklist__box" aria-hidden="true"></span><div class="checklist__text"><b>💬 Discord</b><small>Signaler la prise de service</small></div></div>
     </div>
     <button type="button" class="checklist__reset" id="checklistReset">↺ Réinitialiser la checklist</button>
   </div>
 </section>
 
-<section class="s" id="fleet" data-section="fleet">
+<!-- ═══ 07 · FLOTTE ═══ -->
+<section class="s" id="fleet" data-section="fleet" aria-label="Notre flotte de véhicules">
   <div class="s__inner">
     <div class="cat__head">
       <div><p class="eyebrow"><i></i>Notre parc</p><h2 class="cat__title">La <b>flotte.</b></h2></div>
       <p class="num"><span id="fleetCount">23</span> véhicules · Tangerine Street</p>
     </div>
     <div class="fleet-tools">
-      <label class="fleet-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg><input type="search" id="fleetSearch" placeholder="Rechercher un modèle, plaque ou chauffeur..."></label>
+      <label class="fleet-search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="search" id="fleetSearch" placeholder="Rechercher un modèle, plaque ou chauffeur..." aria-label="Rechercher un véhicule">
+      </label>
       <div class="fleet-count-badge"><b id="fleetResultCount">23</b> résultats</div>
     </div>
-    <div class="cats" id="fleetFilters"></div>
+    <div class="cats" id="fleetFilters" role="group" aria-label="Filtres de flotte"></div>
     <div class="grid-head"><h3 id="fleetTitle">Tous les véhicules</h3><span id="fleetMeta">23 affichés</span></div>
-    <div class="grid" id="fleetGrid"></div>
+    <div class="grid" id="fleetGrid" role="list"></div>
   </div>
 </section>
 
-<section class="s" id="team" data-section="team">
+<!-- ═══ 08 · ÉQUIPE ═══ -->
+<section class="s" id="team" data-section="team" aria-label="Notre équipe">
   <div class="s__inner">
     <div style="margin-bottom:52px;max-width:820px">
       <p class="eyebrow"><i></i>Direction &amp; chauffeurs</p>
@@ -323,7 +422,8 @@ setTimeout(function(){
   </div>
 </section>
 
-<section class="s" id="avis" data-section="avis">
+<!-- ═══ 09 · AVIS ═══ -->
+<section class="s" id="avis" data-section="avis" aria-label="Avis clients">
   <div class="s__inner">
     <div style="margin-bottom:52px;max-width:820px">
       <p class="eyebrow"><i></i>Ton retour compte</p>
@@ -343,14 +443,14 @@ setTimeout(function(){
       </div>
       <div class="rating-block__right">
         <p>Clique pour noter</p>
-        <div class="rating-stars-input" id="ratingInput">
-          <button class="rating-star" data-value="1" type="button" aria-label="1 étoile"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>
-          <button class="rating-star" data-value="2" type="button" aria-label="2 étoiles"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>
-          <button class="rating-star" data-value="3" type="button" aria-label="3 étoiles"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>
-          <button class="rating-star" data-value="4" type="button" aria-label="4 étoiles"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>
-          <button class="rating-star" data-value="5" type="button" aria-label="5 étoiles"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>
+        <div class="rating-stars-input" id="ratingInput" role="radiogroup" aria-label="Note de 1 à 5 étoiles">
+          <button class="rating-star" data-value="1" type="button" aria-label="1 étoile"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>
+          <button class="rating-star" data-value="2" type="button" aria-label="2 étoiles"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>
+          <button class="rating-star" data-value="3" type="button" aria-label="3 étoiles"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>
+          <button class="rating-star" data-value="4" type="button" aria-label="4 étoiles"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>
+          <button class="rating-star" data-value="5" type="button" aria-label="5 étoiles"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>
         </div>
-        <div class="rating-msg" id="ratingMsg"></div>
+        <div class="rating-msg" id="ratingMsg" aria-live="polite"></div>
       </div>
     </div>
   </div>
@@ -358,31 +458,57 @@ setTimeout(function(){
 
 </main>
 
-<footer class="footer">
+<!-- ═══ FOOTER ═══ -->
+<footer class="footer" role="contentinfo">
   <div class="footer__grid">
-    <div class="footer__brand"><img src="https://files.catbox.moe/nl7txj.png" alt="" width="68" height="68"><p>La compagnie de taxi de référence sur Sensity RP.</p></div>
-    <div><h4>Navigation</h4><ul>
-      <li><a href="#stats" data-scroll="stats">Chiffres</a></li>
-      <li><a href="#primes" data-scroll="primes">Primes</a></li>
-      <li><a href="#hornys" data-scroll="hornys">Horny's & Tarifs</a></li>
-      <li><a href="#services" data-scroll="services">Services</a></li>
-      <li><a href="#fleet" data-scroll="fleet">Flotte</a></li>
-      <li><a href="#team" data-scroll="team">Équipe</a></li>
-    </ul></div>
-    <div><h4>Compagnie</h4><ul><li>Tangerine Street</li><li>Los Santos</li><li>Radio 17 Hz</li><li>24 h / 24</li></ul></div>
-    <div><h4>Liens</h4><ul>
-      <li><a href="https://discord.gg/be8CdjzPna" target="_blank" rel="noopener noreferrer">Discord Taxi</a></li>
-      <li><a href="#infos" data-scroll="infos">Contact</a></li>
-    </ul></div>
+    <div class="footer__brand">
+      <img src="https://files.catbox.moe/nl7txj.png" alt="Logo Taxi Downtown" width="68" height="68" loading="lazy">
+      <p>La compagnie de taxi de référence sur Sensity RP. Service premium, flotte entretenue, chauffeurs gradés.</p>
+    </div>
+    <div>
+      <h4>Navigation</h4>
+      <ul>
+        <li><a href="#stats" data-scroll="stats">Chiffres</a></li>
+        <li><a href="#primes" data-scroll="primes">Primes</a></li>
+        <li><a href="#hornys" data-scroll="hornys">Horny's &amp; Tarifs</a></li>
+        <li><a href="#services" data-scroll="services">Services</a></li>
+        <li><a href="#fleet" data-scroll="fleet">Flotte</a></li>
+        <li><a href="#team" data-scroll="team">Équipe</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Compagnie</h4>
+      <ul>
+        <li>Tangerine Street</li>
+        <li>Los Santos</li>
+        <li>Radio 17 Hz</li>
+        <li>24 h / 24</li>
+      </ul>
+    </div>
+    <div>
+      <h4>Liens</h4>
+      <ul>
+        <li><a href="https://discord.gg/be8CdjzPna" target="_blank" rel="noopener noreferrer">Discord Taxi</a></li>
+        <li><a href="#infos" data-scroll="infos">Contact</a></li>
+        <li><a href="#avis" data-scroll="avis">Laisser un avis</a></li>
+      </ul>
+    </div>
   </div>
   <div class="footer__bottom">
-    <span>© <span data-year></span> Taxi Downtown · Sensity RP</span>
-    <span>Appuie sur <kbd style="padding:2px 6px;background:var(--bg-0);border:1px solid var(--line-3);border-radius:3px;font-size:10px">?</kbd> pour les raccourcis</span>
+    <span>© <span data-year>2026</span> Taxi Downtown · Sensity RP · Tous droits réservés</span>
+    <span>Appuie sur <kbd style="padding:2px 6px;background:var(--bg-0);border:1px solid var(--line-3);border-radius:3px;font-size:10px">?</kbd> pour les raccourcis clavier</span>
   </div>
 </footer>
 
 <div id="modalRoot"></div>
 <input type="file" id="adminFileInput" accept=".json" hidden>
+
+<!-- ═══ NOSCRIPT FALLBACK ═══ -->
+<noscript>
+  <div style="position:fixed;top:0;left:0;right:0;background:#e3121f;color:#fff;text-align:center;padding:10px;font-family:monospace;z-index:9999">
+    JavaScript est désactivé. Certaines fonctionnalités peuvent ne pas fonctionner.
+  </div>
+</noscript>
 
 <script src="app.js" defer></script>
 </body>
