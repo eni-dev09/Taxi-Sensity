@@ -54,14 +54,15 @@ setTimeout(function(){
 
 <nav class="menu" id="menu" hidden aria-label="Menu">
   <ul class="menu__links">
-    <li><a href="#services" data-scroll="services"><small>04</small><span>Services</span></a></li>
-    <li><a href="#avis" data-scroll="avis"><small>08</small><span>Avis</span></a></li>
     <li><a href="#hero" data-scroll="hero"><small>01</small><span>Accueil</span></a></li>
-    <li><a href="#primes" data-scroll="primes"><small>02</small><span>Primes</span></a></li>
-    <li><a href="#hornys" data-scroll="hornys"><small>03</small><span>Horny's & Tarifs</span></a></li>
-    <li><a href="#infos" data-scroll="infos"><small>04</small><span>Infos service</span></a></li>
-    <li><a href="#fleet" data-scroll="fleet"><small>05</small><span>Flotte</span></a></li>
-    <li><a href="#team" data-scroll="team"><small>06</small><span>Équipe</span></a></li>
+    <li><a href="#stats" data-scroll="stats"><small>02</small><span>Chiffres</span></a></li>
+    <li><a href="#primes" data-scroll="primes"><small>03</small><span>Primes</span></a></li>
+    <li><a href="#hornys" data-scroll="hornys"><small>04</small><span>Horny's & Tarifs</span></a></li>
+    <li><a href="#services" data-scroll="services"><small>05</small><span>Services</span></a></li>
+    <li><a href="#infos" data-scroll="infos"><small>06</small><span>Infos service</span></a></li>
+    <li><a href="#fleet" data-scroll="fleet"><small>07</small><span>Flotte</span></a></li>
+    <li><a href="#team" data-scroll="team"><small>08</small><span>Équipe</span></a></li>
+    <li><a href="#avis" data-scroll="avis"><small>09</small><span>Avis</span></a></li>
   </ul>
   <div class="menu__side">
     <div><h4>Disponibilité</h4><p style="color:var(--ink-1)">24 h / 24 · 7 j / 7<br>Radio <b>17 Hz</b></p></div>
@@ -74,7 +75,7 @@ setTimeout(function(){
   <div class="hud__tl"><b id="adminTrigger" tabindex="0">TD</b><span>Compagnie · Los Santos</span></div>
   <div class="hud__tr"><div class="hud__idx"><span id="hudIdx">01</span><small>/ 05</small></div><span id="hudCat">Accueil</span></div>
   <div class="hud__bl">
-    <span><i class="dot"></i><b id="hudCount">16</b> véhicules</span>
+    <span><i class="dot"></i><b id="hudCount">23</b> véhicules</span>
     <span id="hudSection">Accueil</span>
   </div>
   <div class="hud__br">
@@ -87,7 +88,6 @@ setTimeout(function(){
 
 <main class="main" id="main">
 
-<!-- ═══ 01 · HERO ═══ -->
 <section class="s s-hero" id="hero" data-section="hero">
   <div class="s__inner">
     <h1 class="sr-only">Taxi Downtown · Sensity RP</h1>
@@ -103,7 +103,7 @@ setTimeout(function(){
         </div>
         <div class="hero__sub">
           <span class="hero__veh">À l'affiche · <b id="heroVeh">Taxi Downtown</b></span>
-          <span class="hero__price" id="heroPrice">16 véhicules · 11 chauffeurs</span>
+          <span class="hero__price" id="heroPrice">23 véhicules · 12 chauffeurs</span>
           <span class="hero__day">Aujourd'hui · <b id="heroDay">0 courses</b></span>
         </div>
       </div>
@@ -118,7 +118,6 @@ setTimeout(function(){
   </div>
 </section>
 
-<!-- ═══ 01.5 · CHIFFRES CLÉS ═══ -->
 <section class="s s-stats" id="stats" data-section="stats">
   <div class="s__inner">
     <div class="stats-hero">
@@ -146,14 +145,12 @@ setTimeout(function(){
   </div>
 </section>
 
-<!-- ═══ 02 · PRIMES ═══ -->
 <section class="s" id="primes" data-section="primes">
   <div class="s__inner">
     <div style="margin-bottom:52px;max-width:820px">
       <p class="eyebrow"><i></i>Récompenses hebdomadaires</p>
       <h2 class="display" style="font-size:clamp(44px,7vw,96px);margin:22px 0">Les <b>primes.</b></h2>
     </div>
-
     <div class="countdown">
       <h4>⏱ Prochaine distribution des primes</h4>
       <div class="countdown__timer">
@@ -163,13 +160,11 @@ setTimeout(function(){
         <div class="countdown__cell"><b id="cdSecs">--</b><span>Sec</span></div>
       </div>
     </div>
-
     <div class="primes" style="margin-top:24px">
       <div class="primes__card first"><div class="primes__rank">1ʳᵉ Place</div><div class="primes__amount">20 000 $</div><div class="primes__label">Le plus investi</div></div>
       <div class="primes__card"><div class="primes__rank">2ᵉ Place</div><div class="primes__amount">15 000 $</div><div class="primes__label">Régularité</div></div>
       <div class="primes__card"><div class="primes__rank">3ᵉ Place</div><div class="primes__amount">10 000 $</div><div class="primes__label">Activité</div></div>
     </div>
-
     <div class="info-panel">
       <h4>Règle du jeu</h4>
       <ul>
@@ -182,7 +177,6 @@ setTimeout(function(){
   </div>
 </section>
 
-<!-- ═══ 03 · HORNY'S & TARIFS ═══ -->
 <section class="s" id="hornys" data-section="hornys">
   <div class="s__inner">
     <div style="margin-bottom:52px;max-width:820px">
@@ -190,7 +184,6 @@ setTimeout(function(){
       <h2 class="display" style="font-size:clamp(44px,7vw,96px);margin:22px 0">Horny's <b>& Tarifs.</b></h2>
       <p style="color:var(--ink-2);font-size:15px;line-height:1.75;max-width:640px">Revente de menus à bord de nos taxis et grille officielle des courses.</p>
     </div>
-
     <div class="hornys-grid">
       <div class="hornys-main">
         <h3>Revente Horny's</h3>
@@ -210,7 +203,6 @@ setTimeout(function(){
         <div class="hornys-note"><b>Astuce :</b> force la vente orale pendant la course.</div>
       </aside>
     </div>
-
     <div class="calc">
       <h4>💰 Calculateur de gains</h4>
       <div class="calc__row">
@@ -222,39 +214,22 @@ setTimeout(function(){
         </div>
       </div>
       <div class="calc__results">
-        <div class="calc__result">
-          <small>Prix de vente</small>
-          <b id="calcTotal">1 000 $</b>
-        </div>
-        <div class="calc__result highlight">
-          <small>Ta prime directe</small>
-          <b id="calcCommission">400 $</b>
-        </div>
+        <div class="calc__result"><small>Prix de vente</small><b id="calcTotal">1 000 $</b></div>
+        <div class="calc__result highlight"><small>Ta prime directe</small><b id="calcCommission">400 $</b></div>
       </div>
     </div>
-
     <div class="team__label" style="margin-top:70px">— Grille tarifaire officielle</div>
-
     <div class="tarif-grid">
-      <table class="tarif-table">
-        <thead><tr><th>Zone</th><th>Tarif</th></tr></thead>
-        <tbody id="tarifBody"></tbody>
-      </table>
+      <table class="tarif-table"><thead><tr><th>Zone</th><th>Tarif</th></tr></thead><tbody id="tarifBody"></tbody></table>
       <aside class="tarif-note">
         <h4>Bon à savoir</h4>
-        <p>
-          <b>En ville</b> : trajets intra-Los Santos.<br>
-          <b>Hors ville</b> : banlieue, Sandy Shores, Paleto Bay.<br>
-          <b>Cayo Perico</b> : île privée, tarif premium.<br><br>
-          <b>Nouveaux arrivants</b> : -50 % sur toutes les courses.
-        </p>
+        <p><b>En ville</b> : trajets intra-Los Santos.<br><b>Hors ville</b> : banlieue, Sandy Shores, Paleto Bay.<br><b>Cayo Perico</b> : île privée, tarif premium.<br><br><b>Nouveaux arrivants</b> : -50 % sur toutes les courses.</p>
         <span class="tarif-promo">Code Halloween · -25 % tout octobre</span>
       </aside>
     </div>
   </div>
 </section>
 
-<!-- ═══ 03.5 · NOS SERVICES ═══ -->
 <section class="s" id="services" data-section="services">
   <div class="s__inner">
     <div style="margin-bottom:52px;max-width:820px">
@@ -303,7 +278,6 @@ setTimeout(function(){
   </div>
 </section>
 
-<!-- ═══ 04 · INFOS SERVICE ═══ -->
 <section class="s" id="infos" data-section="infos">
   <div class="s__inner">
     <div style="margin-bottom:52px;max-width:820px">
@@ -311,59 +285,44 @@ setTimeout(function(){
       <h2 class="display" style="font-size:clamp(44px,7vw,96px);margin:22px 0">Infos en <b>service.</b></h2>
       <p style="color:var(--ink-2);font-size:15px;line-height:1.75;max-width:640px">Checklist rapide à suivre avant chaque prise de service. Clique sur chaque étape pour la valider.</p>
     </div>
-
     <div class="checklist" id="serviceChecklist">
-      <div class="checklist__item" data-check="radio">
-        <span class="checklist__box"></span>
-        <div class="checklist__text">
-          <b>📻 Radio 17 Hz</b>
-          <small>Se connecter avant de partir</small>
-        </div>
-      </div>
-      <div class="checklist__item" data-check="tenue">
-        <span class="checklist__box"></span>
-        <div class="checklist__text">
-          <b>👔 Tenue de service</b>
-          <small>Uniforme complet + taxi vérifié</small>
-        </div>
-      </div>
-      <div class="checklist__item" data-check="stock">
-        <span class="checklist__box"></span>
-        <div class="checklist__text">
-          <b>🍔 5 menus Horny's</b>
-          <small>Stock avant la première course</small>
-        </div>
-      </div>
-      <div class="checklist__item" data-check="discord">
-        <span class="checklist__box"></span>
-        <div class="checklist__text">
-          <b>💬 Discord</b>
-          <small>Signaler la prise de service</small>
-        </div>
-      </div>
+      <div class="checklist__item" data-check="radio"><span class="checklist__box"></span><div class="checklist__text"><b>📻 Radio 17 Hz</b><small>Se connecter avant de partir</small></div></div>
+      <div class="checklist__item" data-check="tenue"><span class="checklist__box"></span><div class="checklist__text"><b>👔 Tenue de service</b><small>Uniforme complet + taxi vérifié</small></div></div>
+      <div class="checklist__item" data-check="stock"><span class="checklist__box"></span><div class="checklist__text"><b>🍔 5 menus Horny's</b><small>Stock avant la première course</small></div></div>
+      <div class="checklist__item" data-check="discord"><span class="checklist__box"></span><div class="checklist__text"><b>💬 Discord</b><small>Signaler la prise de service</small></div></div>
     </div>
     <button type="button" class="checklist__reset" id="checklistReset">↺ Réinitialiser la checklist</button>
   </div>
 </section>
 
-<!-- ═══ 05 · FLOTTE ═══ -->
 <section class="s" id="fleet" data-section="fleet">
   <div class="s__inner">
     <div class="cat__head">
       <div><p class="eyebrow"><i></i>Notre parc</p><h2 class="cat__title">La <b>flotte.</b></h2></div>
-      <p class="num"><span id="fleetCount">16</span> véhicules · Tangerine Street</p>
+      <p class="num"><span id="fleetCount">23</span> véhicules · Tangerine Street</p>
     </div>
     <div class="fleet-tools">
       <label class="fleet-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg><input type="search" id="fleetSearch" placeholder="Rechercher un modèle, plaque ou chauffeur..."></label>
-      <div class="fleet-count-badge"><b id="fleetResultCount">16</b> résultats</div>
+      <div class="fleet-count-badge"><b id="fleetResultCount">23</b> résultats</div>
     </div>
     <div class="cats" id="fleetFilters"></div>
-    <div class="grid-head"><h3 id="fleetTitle">Tous les véhicules</h3><span id="fleetMeta">16 affichés</span></div>
+    <div class="grid-head"><h3 id="fleetTitle">Tous les véhicules</h3><span id="fleetMeta">23 affichés</span></div>
     <div class="grid" id="fleetGrid"></div>
   </div>
 </section>
 
-<!-- ═══ 06.5 · AVIS CLIENTS ═══ -->
+<section class="s" id="team" data-section="team">
+  <div class="s__inner">
+    <div style="margin-bottom:52px;max-width:820px">
+      <p class="eyebrow"><i></i>Direction &amp; chauffeurs</p>
+      <h2 class="display" style="font-size:clamp(44px,7vw,96px);margin:22px 0">L'<b>équipe.</b></h2>
+    </div>
+    <div class="team__top" id="teamTop"></div>
+    <div class="team__label">— Chauffeurs</div>
+    <div class="team__rest" id="teamRest"></div>
+  </div>
+</section>
+
 <section class="s" id="avis" data-section="avis">
   <div class="s__inner">
     <div style="margin-bottom:52px;max-width:820px">
@@ -397,28 +356,16 @@ setTimeout(function(){
   </div>
 </section>
 
-<!-- ═══ 06 · ÉQUIPE ═══ -->
-<section class="s" id="team" data-section="team">
-  <div class="s__inner">
-    <div style="margin-bottom:52px;max-width:820px">
-      <p class="eyebrow"><i></i>Direction &amp; chauffeurs</p>
-      <h2 class="display" style="font-size:clamp(44px,7vw,96px);margin:22px 0">L'<b>équipe.</b></h2>
-    </div>
-    <div class="team__top" id="teamTop"></div>
-    <div class="team__label">— Chauffeurs</div>
-    <div class="team__rest" id="teamRest"></div>
-  </div>
-</section>
-
 </main>
 
 <footer class="footer">
   <div class="footer__grid">
     <div class="footer__brand"><img src="https://files.catbox.moe/nl7txj.png" alt="" width="68" height="68"><p>La compagnie de taxi de référence sur Sensity RP.</p></div>
     <div><h4>Navigation</h4><ul>
+      <li><a href="#stats" data-scroll="stats">Chiffres</a></li>
       <li><a href="#primes" data-scroll="primes">Primes</a></li>
       <li><a href="#hornys" data-scroll="hornys">Horny's & Tarifs</a></li>
-      <li><a href="#infos" data-scroll="infos">Infos service</a></li>
+      <li><a href="#services" data-scroll="services">Services</a></li>
       <li><a href="#fleet" data-scroll="fleet">Flotte</a></li>
       <li><a href="#team" data-scroll="team">Équipe</a></li>
     </ul></div>
