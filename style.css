@@ -595,6 +595,10 @@ textarea:focus-visible,
 }
 
 @media (max-width:640px){
+  /* Correction de la taille des titres pour mobile */
+  .display { font-size: 32px !important; }
+  .hero__title { font-size: 34px !important; }
+
   .stats-hero{grid-template-columns:1fr 1fr}
   .stat-hero{padding:26px 16px}
   .stat-hero__icon{font-size:28px;margin-bottom:12px}
