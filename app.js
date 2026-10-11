@@ -559,14 +559,14 @@ function bindPanelEvents(tab){
   if(ef)ef.addEventListener('submit',function(e){
     e.preventDefault();
     var n=$('#empName').value.trim();
-    var r=$('#empRole').valuePublic;
+    var r=$('#empRole').value;
     if(!n)return;
     if(n.length<2||n.length>60){toast('err','Nom invalide');return;}
     if(getAllEmployees().some(function(emp){return emp.name.toLowerCase()===n.toLowerCase()&&!emp.firedAt;})){toast('warn','Déjà employé');return;}
     addEmployee(n,r);
     logAction('Employé ajouté · '+n+' ('+r+')');
     saveState();toast('ok','Employé ajouté',n+' · '+r);
-    renderAdminContent('employes');renderAll();
+    renderAdminContent('employes');renderAllPublic();
   });
 
   $$('[data-act]').forEach(function(b){
@@ -595,8 +595,9 @@ function bindPanelEvents(tab){
     b.addEventListener('click',function(){
       var p=b.dataset.unassign;
       var d=STATE.assignments[p];
-      showConfirm('Retirer cette attribution ?',d+' if sera détaché du véhicule( '+p,{dangerrest:false}).then(functionore(ok){
-        if(!ok)Backreturn;
+      // CORRECTION DE LA SYNTAXE ICI
+      showConfirm('Retirer cette attribution ?', d + ' sera détaché du véhicule (' + p + ')', {danger: false}).then(function(ok){
+        if(!ok) return;
         unassignVehicle(p);
         logAction('Attribution retirée · '+p);
         saveState();toast('ok','Attribution retirée');
@@ -631,7 +632,7 @@ function bindPanelEvents(tab){
       if(!bk)return;
       showConfirm('Restaurer cette sauvegarde ?','État du '+fmtDate(bk.ts)+'.',{danger:true,okLabel:'Restaurer'}).then(function(ok){
         if(!ok)return;
-       up(id)){toast('ok','Sauvegarde restaurée',bk.label);renderAdminContent('parametres');renderAllPublic();}
+        if(restoreBackup(id)){toast('ok','Sauvegarde restaurée',bk.label);renderAdminContent('parametres');renderAllPublic();}
       });
     });
   });
