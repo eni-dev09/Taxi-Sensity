@@ -41,7 +41,6 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="dns-prefetch" href="https://api.jsonbin.io">
 <link rel="preload" as="image" href="logo.png">
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800&family=Permanent+Marker&display=swap">
@@ -108,7 +107,7 @@ setTimeout(function(){
   </div>
 </header>
 
-<!-- ═══ MENU PLEIN ÉCRAN ═══ -->
+<!-- ═══ MENU ═══ -->
 <nav class="menu" id="menu" hidden aria-label="Menu principal">
   <ul class="menu__links">
     <li><a href="#hero" data-scroll="hero"><small>01</small><span>Accueil</span></a></li>
@@ -150,7 +149,7 @@ setTimeout(function(){
 
 <main class="main" id="main" role="main">
 
-<!-- ═══ 01 · HERO ═══ -->
+<!-- ═══ HERO ═══ -->
 <section class="s s-hero" id="hero" data-section="hero" aria-label="Présentation">
   <div class="s__inner">
     <h1 class="sr-only">Taxi Downtown — Compagnie de taxi à Los Santos sur Sensity RP</h1>
@@ -171,7 +170,7 @@ setTimeout(function(){
         </div>
       </div>
       <div class="hero__nav">
-        <div class="hero__pager" id="heroPager" role="tablist" aria-label="Choisir un thème de présentation"><span class="hero__pager-dot" id="heroPagerDot"></span></div>
+        <div class="hero__pager" id="heroPager" role="tablist" aria-label="Choisir un thème"><span class="hero__pager-dot" id="heroPagerDot"></span></div>
         <div class="hero__arrows">
           <button class="hero__arrow" id="heroPrev" type="button" aria-label="Présentation précédente"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
           <button class="hero__arrow" id="heroNext" type="button" aria-label="Présentation suivante"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
@@ -181,7 +180,7 @@ setTimeout(function(){
   </div>
 </section>
 
-<!-- ═══ 02 · CHIFFRES CLÉS ═══ -->
+<!-- ═══ CHIFFRES CLÉS ═══ -->
 <section class="s s-stats" id="stats" data-section="stats" aria-label="Chiffres clés">
   <div class="s__inner">
     <div class="stats-hero">
@@ -209,7 +208,7 @@ setTimeout(function(){
   </div>
 </section>
 
-<!-- ═══ 03 · PRIMES ═══ -->
+<!-- ═══ PRIMES ═══ -->
 <section class="s" id="primes" data-section="primes" aria-label="Primes hebdomadaires">
   <div class="s__inner">
     <div style="margin-bottom:52px;max-width:820px">
@@ -242,7 +241,7 @@ setTimeout(function(){
   </div>
 </section>
 
-<!-- ═══ 04 · HORNY'S & TARIFS ═══ -->
+<!-- ═══ HORNY'S & TARIFS ═══ -->
 <section class="s" id="hornys" data-section="hornys" aria-label="Partenariat Horny's et tarifs">
   <div class="s__inner">
     <div style="margin-bottom:52px;max-width:820px">
@@ -296,7 +295,7 @@ setTimeout(function(){
   </div>
 </section>
 
-<!-- ═══ 05 · SERVICES ═══ -->
+<!-- ═══ SERVICES ═══ -->
 <section class="s" id="services" data-section="services" aria-label="Nos services">
   <div class="s__inner">
     <div style="margin-bottom:52px;max-width:820px">
@@ -345,7 +344,7 @@ setTimeout(function(){
   </div>
 </section>
 
-<!-- ═══ 06 · INFOS SERVICE ═══ -->
+<!-- ═══ INFOS SERVICE ═══ -->
 <section class="s" id="infos" data-section="infos" aria-label="Informations pour la prise de service">
   <div class="s__inner">
     <div style="margin-bottom:52px;max-width:820px">
@@ -363,7 +362,7 @@ setTimeout(function(){
   </div>
 </section>
 
-<!-- ═══ 07 · FLOTTE ═══ -->
+<!-- ═══ FLOTTE ═══ -->
 <section class="s" id="fleet" data-section="fleet" aria-label="Notre flotte de véhicules">
   <div class="s__inner">
     <div class="cat__head">
@@ -378,12 +377,13 @@ setTimeout(function(){
       <div class="fleet-count-badge"><b id="fleetResultCount">23</b> résultats</div>
     </div>
     <div class="cats" id="fleetFilters" role="group" aria-label="Filtres de flotte"></div>
-    <div class="grid-head"><h3 id="fleetTitle">Tous les véhicules</h3><span id="fleetMeta">23 affichés</span></div>
+    <div class="grid-head"><h3 id="fleetTitle">Tous les véhicules</h3><span id="f">
+leetMeta">23 affichés</span></div>
     <div class="grid" id="fleetGrid" role="list"></div>
   </div>
 </section>
 
-<!-- ═══ 08 · ÉQUIPE ═══ -->
+<!-- ═══ ÉQUIPE ═══ -->
 <section class="s" id="team" data-section="team" aria-label="Notre équipe">
   <div class="s__inner">
     <div style="margin-bottom:52px;max-width:820px">
@@ -396,13 +396,13 @@ setTimeout(function(){
   </div>
 </section>
 
-<!-- ═══ 08.5 · PLANNER ═══ -->
+<!-- ═══ PLANNER ═══ -->
 <section class="s" id="planner" data-section="planner" aria-label="Planning hebdomadaire">
   <div class="s__inner">
     <div style="margin-bottom:52px;max-width:820px">
       <p class="eyebrow"><i></i>Disponibilités de l'équipe</p>
       <h2 class="display" style="font-size:clamp(44px,7vw,96px);margin:22px 0">Le <b>planning.</b></h2>
-      <p style="color:var(--ink-2);font-size:15px;line-height:1.75;max-width:640px">Planning hebdomadaire des disponibilités de service. Chaque employé dépose ses créneaux, la direction valide et le planning se met à jour automatiquement.</p>
+      <p style="color:var(--ink-2);font-size:15px;line-height:1.75;max-width:640px">Planning hebdomadaire des disponibilités de service. Chaque employé dépose ses créneaux.</p>
     </div>
     <div class="planner">
       <div class="planner__head">
@@ -410,8 +410,7 @@ setTimeout(function(){
         <div class="planner__week" id="plannerWeek">—</div>
         <button class="planner__nav" id="plannerNext" type="button" aria-label="Semaine suivante">›</button>
       </div>
-      <div class="planner__cta">
-        <button type="button" class="btn btn--primary" id="btnDeposit">📝 Déposer mes disponibilités</button>
+      <div class="planner__cta        <button type="button" class="btn btn--primary" id="btnDeposit">📝 Déposer mes disponibilités</button>
         <span class="planner__hint" id="plannerCount"></span>
       </div>
       <div class="planner__wrap"><div class="planner__grid" id="plannerGrid" role="grid"></div></div>
@@ -423,7 +422,7 @@ setTimeout(function(){
   </div>
 </section>
 
-<!-- ═══ 09 · AVIS ═══ -->
+<!-- ═══ AVIS ═══ -->
 <section class="s" id="avis" data-section="avis" aria-label="Avis clients">
   <div class="s__inner">
     <div style="margin-bottom:52px;max-width:820px">
