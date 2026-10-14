@@ -1,4 +1,4 @@
-/* TAXI DOWNTOWN · app.js v6.0 */
+/* TAXI DOWNTOWN · app.js v6.1 */
 (function(){
 'use strict';
 
@@ -29,11 +29,13 @@ var LS={get:function(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(
 var STATE=LS.get('td-state',null)||{
   invoices:[],employees:[],vehicles:[],
   assignments:{'CW6683ZV':'Bob Musar','CJ8249YD':'Noah Dupont','BX5408WL':'Arthur Bendal','FD3839EL':'Maxime Rivière','YP7603HL':'Sacha Mermoud','LX4255HP':'Sofian Badhaoui','RM1393GV':'Filou Pepito','WN5307RY':'Jimy Smith','DIR0001':'Jimy Smith','JZ0498AE':'Sam Le Gros','DIR0002':'Sam Le Gros','DC3624SY':'Romeo Cali','DIR0003':'Romeo Cali'},
-  history:[],baseOverrides:{},updatedAt:null
+  history:[],baseOverrides:{},planner:{},plannerWeek:Date.now(),updatedAt:null
 };
 ['invoices','employees','vehicles','history'].forEach(function(k){if(!Array.isArray(STATE[k]))STATE[k]=[];});
 if(!STATE.assignments||typeof STATE.assignments!=='object')STATE.assignments={};
 if(!STATE.baseOverrides||typeof STATE.baseOverrides!=='object')STATE.baseOverrides={};
+if(!STATE.planner||typeof STATE.planner!=='object')STATE.planner={};
+if(!STATE.plannerWeek)STATE.plannerWeek=Date.now();
 
 /* ═══ FILE D'ATTENTE OFFLINE ═══ */
 var PENDING_KEY='td-pending';
@@ -53,7 +55,8 @@ function captureSnapshot(){
     vehicles:JSON.parse(JSON.stringify(STATE.vehicles||[])),
     assignments:JSON.parse(JSON.stringify(STATE.assignments||{})),
     history:JSON.parse(JSON.stringify(STATE.history||[])),
-    baseOverrides:JSON.parse(JSON.stringify(STATE.baseOverrides||{}))
+    baseOverrides:JSON.parse(JSON.stringify(STATE.baseOverrides||{})),
+    planner:JSON.parse(JSON.stringify(STATE.planner||{}))
   };
 }
 function createBackup(label){
@@ -76,13 +79,14 @@ function restoreBackup(id){
   STATE.assignments=JSON.parse(JSON.stringify(b.snapshot.assignments||{}));
   STATE.history=JSON.parse(JSON.stringify(b.snapshot.history||[]));
   STATE.baseOverrides=JSON.parse(JSON.stringify(b.snapshot.baseOverrides||{}));
+  STATE.planner=JSON.parse(JSON.stringify(b.snapshot.planner||{}));
   STATE.updatedAt=Date.now();
   STATE.history.unshift({action:'🔄 Restauration · '+b.label,ts:Date.now(),by:'Direction'});
   applyBaseOverrides();saveState();_prevSnap=captureSnapshot();return true;
 }
 function deleteBackup(id){setBackups(getBackups().filter(function(x){return x.id!==id;}));}
 
-/* ═══ SYNC avec retry + offline queue ═══ */
+/* ═══ SYNC ═══ */
 var SYNC={
   _pingMs:0,
   setState:function(state,label){
@@ -90,9 +94,7 @@ var SYNC={
     el.dataset.state=state;
     el.textContent=label||(state==='ok'?'Synchro':state==='pending'?'Envoi...':state==='error'?'Hors-ligne':'Local');
     var ind=document.getElementById('saveIndicator');
-    if(ind){
-      ind.style.opacity=state==='pending'?'1':'0';
-    }
+    if(ind){ind.style.opacity=state==='pending'?'1':'0';}
   },
   load:function(){
     if(!WORKER_CONFIGURED){this.setState('idle','Local');return Promise.resolve(null);}
@@ -140,14 +142,13 @@ function saveState(){
   STATE.updatedAt=Date.now();
   var ok=LS.set('td-state',STATE);
   if(!ok){
-    // Quota dépassé : vider les backups les plus vieux puis réessayer
     var b=getBackups();
     if(b.length>2){setBackups(b.slice(0,2));LS.set('td-state',STATE);}
   }
   if(_saveDebounce)clearTimeout(_saveDebounce);
   _saveDebounce=setTimeout(function(){
     if(!WORKER_CONFIGURED)return;
-    var p={invoices:STATE.invoices,employees:STATE.employees,vehicles:STATE.vehicles,assignments:STATE.assignments,history:STATE.history,baseOverrides:STATE.baseOverrides,updatedAt:STATE.updatedAt};
+    var p={invoices:STATE.invoices,employees:STATE.employees,vehicles:STATE.vehicles,assignments:STATE.assignments,history:STATE.history,baseOverrides:STATE.baseOverrides,planner:STATE.planner,updatedAt:STATE.updatedAt};
     SYNC.save(p).then(function(ok){if(!ok)setTimeout(function(){SYNC.flushPending();},5000);});
   },400);
 }
@@ -196,7 +197,7 @@ function sanctionEmployee(id,level,reason){var e=findEmployeeById(id);if(!e)retu
 function assignVehicle(plate,name){if(safeKey(plate))STATE.assignments[plate]=name;}
 function unassignVehicle(plate){if(safeKey(plate))delete STATE.assignments[plate];}
 
-/* ═══ TOASTS améliorés avec progress ═══ */
+/* ═══ TOASTS ═══ */
 function toast(type,title,msg,dur){
   dur=dur||3500;
   var stack=$('#toastStack');if(!stack)return;
@@ -308,7 +309,6 @@ function renderFleet(){
     var d=getEmployeeForVehicle(v.plate)||'';
     return fuzzyMatch(v.model,q)||fuzzyMatch(v.plate,q)||fuzzyMatch(d,q);
   });
-  // Tri
   f=f.slice().sort(function(a,b){
     if(sortBy==='model')return a.model.localeCompare(b.model);
     if(sortBy==='driver'){
@@ -351,6 +351,116 @@ function renderTarifs(){var tb=$('#tarifBody');if(!tb)return;tb.innerHTML=TARIFS
 function renderAllPublic(){
   renderHeroStats();renderFleetFilters();renderFleet();renderTeam();renderTarifs();
   var hu=$('#hudUpdated');if(hu)hu.textContent=ago(STATE.updatedAt);
+}
+
+/* ═══ PLANNER ═══ */
+var PLANNER_DAYS=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+var PLANNER_SLOTS=[{id:'matin',label:'Matin',hours:'08 — 12'},{id:'aprem',label:'Après-midi',hours:'12 — 18'},{id:'soir',label:'Soir',hours:'18 — 00'}];
+function getMonday(d){var dt=new Date(d);var day=dt.getDay();var diff=dt.getDate()-day+(day===0?-6:1);dt.setDate(diff);dt.setHours(0,0,0,0);return dt;}
+function weekKey(ts){var m=getMonday(new Date(ts));return m.getFullYear()+'-'+String(m.getMonth()+1).padStart(2,'0')+'-'+String(m.getDate()).padStart(2,'0');}
+function weekLabel(ts){var m=getMonday(new Date(ts));var e=new Date(m);e.setDate(m.getDate()+6);var f=function(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');};return f(m)+' → '+f(e);}
+
+function getEmployeeAvail(wk,name){var w=STATE.planner[wk];if(!w)return[];return w[name]||[];}
+function setEmployeeAvail(wk,name,arr){
+  if(!STATE.planner[wk])STATE.planner[wk]={};
+  if(arr&&arr.length)STATE.planner[wk][name]=arr;
+  else delete STATE.planner[wk][name];
+}
+function getSlotNames(wk,dayIdx,slotId){
+  var w=STATE.planner[wk];if(!w)return[];
+  var key=dayIdx+'-'+slotId;var out=[];
+  Object.keys(w).forEach(function(n){if((w[n]||[]).indexOf(key)!==-1)out.push(n);});
+  return out;
+}
+
+function renderPlanner(){
+  var grid=document.getElementById('plannerGrid');
+  var wkEl=document.getElementById('plannerWeek');
+  var cntEl=document.getElementById('plannerCount');
+  if(!grid||!wkEl)return;
+  var wk=weekKey(STATE.plannerWeek);
+  wkEl.textContent='Semaine du '+weekLabel(STATE.plannerWeek);
+  if(cntEl){
+    var w=STATE.planner[wk]||{};
+    var n=Object.keys(w).length;
+    cntEl.textContent=n+' employé'+(n>1?'s':'')+' ont déposé leurs dispos';
+  }
+  var html='<div class="planner__cell planner__cell--head">Créneau</div>';
+  for(var d=0;d<7;d++)html+='<div class="planner__cell planner__cell--head">'+PLANNER_DAYS[d]+'</div>';
+  PLANNER_SLOTS.forEach(function(slot){
+    html+='<div class="planner__cell planner__cell--time">'+slot.label+'<small>'+slot.hours+'</small></div>';
+    for(var d=0;d<7;d++){
+      var names=getSlotNames(wk,d,slot.id);
+      var inside=names.length?names.map(function(n){return '<span class="planner__name">'+esc(n)+'</span>';}).join(''):'<span class="planner__empty">—</span>';
+      html+='<div class="planner__cell planner__cell--slot">'+inside+'</div>';
+    }
+  });
+  grid.innerHTML=html;
+}
+
+function openMyAvailabilityModal(){
+  var wk=weekKey(STATE.plannerWeek);
+  var employees=getActiveEmployees();
+  if(!employees.length){toast('warn','Aucun employé','Aucun employé enregistré.');return;}
+  var html='<button class="modal__x" type="button" id="avClose">✕</button>'
+    +'<h2>📝 Mes disponibilités</h2>'
+    +'<p class="intro">Semaine du '+weekLabel(STATE.plannerWeek)+'. Sélectionne ton nom puis coche tes créneaux.</p>'
+    +'<div class="av-form"><label class="av-field"><span>Ton nom</span>'
+    +'<select id="avName"><option value="">— Sélectionner —</option>'
+    +employees.map(function(e){return '<option value="'+esc(e.name)+'">'+esc(e.name)+' · '+esc(e.role)+'</option>';}).join('')
+    +'</select></label></div>'
+    +'<div class="av-grid-wrap"><div class="av-grid" id="avGrid"></div></div>'
+    +'<div class="actions"><button type="button" class="btn" id="avCancel">Annuler</button>'
+    +'<button type="button" class="btn btn--primary" id="avSave" disabled>Enregistrer</button></div>';
+  var m=openModal(html,{small:false});
+  var nameSel=m.querySelector('#avName');
+  var gridEl=m.querySelector('#avGrid');
+  var saveBtn=m.querySelector('#avSave');
+  function renderAvGrid(){
+    var name=nameSel.value;
+    if(!name){
+      gridEl.innerHTML='<div class="av-empty">Sélectionne ton nom pour voir tes créneaux.</div>';
+      saveBtn.disabled=true;return;
+    }
+    saveBtn.disabled=false;
+    var avail=getEmployeeAvail(wk,name);
+    var h='<div class="av-cell av-cell--head">Créneau</div>';
+    for(var d=0;d<7;d++)h+='<div class="av-cell av-cell--head">'+PLANNER_DAYS[d]+'</div>';
+    PLANNER_SLOTS.forEach(function(slot){
+      h+='<div class="av-cell av-cell--time">'+slot.label+'<small>'+slot.hours+'</small></div>';
+      for(var d=0;d<7;d++){
+        var key=d+'-'+slot.id;
+        var checked=avail.indexOf(key)!==-1;
+        h+='<label class="av-cell av-cell--check"><input type="checkbox" data-key="'+key+'"'+(checked?' checked':'')+'><span class="av-check"></span></label>';
+      }
+    });
+    gridEl.innerHTML=h;
+  }
+  nameSel.addEventListener('change',renderAvGrid);
+  renderAvGrid();
+  m.querySelector('#avClose').addEventListener('click',function(){if(m.parentNode)m.parentNode.removeChild(m);});
+  m.querySelector('#avCancel').addEventListener('click',function(){if(m.parentNode)m.parentNode.removeChild(m);});
+  saveBtn.addEventListener('click',function(){
+    var name=nameSel.value;if(!name)return;
+    var keys=[];
+    gridEl.querySelectorAll('input[type=checkbox]:checked').forEach(function(cb){keys.push(cb.dataset.key);});
+    setEmployeeAvail(wk,name,keys);
+    logAction('Dispo · '+name+' ('+keys.length+' créneau'+(keys.length>1?'x':'')+')');
+    saveState();
+    toast('ok','Disponibilités enregistrées',name+' — '+keys.length+' créneau'+(keys.length>1?'x':''));
+    if(m.parentNode)m.parentNode.removeChild(m);
+    renderPlanner();
+  });
+}
+
+function setupPlanner(){
+  var prev=document.getElementById('plannerPrev');
+  var next=document.getElementById('plannerNext');
+  var dep=document.getElementById('btnDeposit');
+  if(prev)prev.addEventListener('click',function(){STATE.plannerWeek=STATE.plannerWeek-7*86400000;renderPlanner();});
+  if(next)next.addEventListener('click',function(){STATE.plannerWeek=STATE.plannerWeek+7*86400000;renderPlanner();});
+  if(dep)dep.addEventListener('click',openMyAvailabilityModal);
+  renderPlanner();
 }
 
 /* ═══ ADMIN ═══ */
@@ -595,7 +705,6 @@ function bindPanelEvents(tab){
     b.addEventListener('click',function(){
       var p=b.dataset.unassign;
       var d=STATE.assignments[p];
-      // CORRECTION DE LA SYNTAXE ICI
       showConfirm('Retirer cette attribution ?', d + ' sera détaché du véhicule (' + p + ')', {danger: false}).then(function(ok){
         if(!ok) return;
         unassignVehicle(p);
@@ -642,7 +751,7 @@ function bindPanelEvents(tab){
       var id=b.dataset.downloadBackup;
       var bk=getBackups().filter(function(x){return x.id===id;})[0];
       if(!bk)return;
-      var d={label:bk.label,ts:bk.ts,date:new Date(bk.ts).toISOString(),invoices:bk.snapshot.invoices||[],employees:bk.snapshot.employees||[],vehicles:bk.snapshot.vehicles||[],assignments:bk.snapshot.assignments||{},history:bk.snapshot.history||[],baseOverrides:bk.snapshot.baseOverrides||{}};
+      var d={label:bk.label,ts:bk.ts,date:new Date(bk.ts).toISOString(),invoices:bk.snapshot.invoices||[],employees:bk.snapshot.employees||[],vehicles:bk.snapshot.vehicles||[],assignments:bk.snapshot.assignments||{},history:bk.snapshot.history||[],baseOverrides:bk.snapshot.baseOverrides||{},planner:bk.snapshot.planner||{}};
       var blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
       var a=document.createElement('a');a.href=URL.createObjectURL(blob);
       a.download='backup-'+new Date(bk.ts).toISOString().slice(0,19).replace(/[:T]/g,'-')+'.json';
@@ -759,7 +868,7 @@ function openSanctionModal(emp){
 
 /* ═══ EXPORT / IMPORT ═══ */
 function exportJSON(){
-  var d={invoices:STATE.invoices,employees:STATE.employees,vehicles:STATE.vehicles,assignments:STATE.assignments,history:STATE.history,baseOverrides:STATE.baseOverrides,exportedAt:new Date().toISOString(),version:6};
+  var d={invoices:STATE.invoices,employees:STATE.employees,vehicles:STATE.vehicles,assignments:STATE.assignments,history:STATE.history,baseOverrides:STATE.baseOverrides,planner:STATE.planner,exportedAt:new Date().toISOString(),version:6};
   var blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download='taxi-downtown-'+new Date().toISOString().slice(0,10)+'.json';
@@ -795,6 +904,7 @@ function importJSON(file){
       if(d.assignments&&typeof d.assignments==='object')STATE.assignments=d.assignments;
       if(Array.isArray(d.history))STATE.history=d.history;
       if(d.baseOverrides&&typeof d.baseOverrides==='object')STATE.baseOverrides=d.baseOverrides;
+      if(d.planner&&typeof d.planner==='object')STATE.planner=d.planner;
       applyBaseOverrides();
       logAction('Import de données');
       saveState();toast('ok','Import réussi');
@@ -808,7 +918,7 @@ function clearEmployees(){showConfirm('Vider les employés custom ?','',{danger:
 function clearVehicles(){showConfirm('Vider les véhicules custom ?','',{danger:true}).then(function(ok){if(!ok)return;STATE.vehicles=[];logAction('Véhicules custom vidés');saveState();toast('ok','Véhicules vidés');renderAdminContent('vehicules');renderAllPublic();});}
 function clearAssignments(){showConfirm('Retirer toutes les attributions ?','',{danger:true}).then(function(ok){if(!ok)return;STATE.assignments={};logAction('Attributions vidées');saveState();toast('ok','Attributions vidées');renderAdminContent('attributions');renderAllPublic();});}
 function clearHistory(){showConfirm('Vider le journal ?','',{danger:true}).then(function(ok){if(!ok)return;STATE.history=[];saveState();toast('ok','Journal vidé');renderAdminContent('historique');});}
-function clearAll(){showConfirm('TOUT réinitialiser ?','Tout sera effacé.',{danger:true,okLabel:'Tout effacer'}).then(function(ok){if(!ok)return;STATE={invoices:[],employees:[],vehicles:[],assignments:{},history:[],baseOverrides:{},updatedAt:Date.now()};saveState();toast('err','Réinitialisation');closeTopModal();renderAllPublic();});}
+function clearAll(){showConfirm('TOUT réinitialiser ?','Tout sera effacé.',{danger:true,okLabel:'Tout effacer'}).then(function(ok){if(!ok)return;STATE={invoices:[],employees:[],vehicles:[],assignments:{},history:[],baseOverrides:{},planner:{},plannerWeek:Date.now(),updatedAt:Date.now()};saveState();toast('err','Réinitialisation');closeTopModal();renderAllPublic();});}
 
 /* ═══ ADMIN PANEL ═══ */
 function openAdminPanel(){
@@ -878,7 +988,8 @@ function openLoginModal(){
 
 /* ═══ MENU / SCROLL / THEME ═══ */
 function setupMenu(){
-  var b=$('#menuBtn'),m=$('#menu');if(!b||!m)return;
+  var b=$('#menuBtn'),m=$('#menu');
+  if(!b||!m)return;
   b.addEventListener('click',function(){
     var o=b.getAttribute('aria-expanded')==='true';
     if(o){
@@ -904,7 +1015,7 @@ document.addEventListener('click',function(e){
   if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
 });
 
-var SECTION_LABELS={hero:'Accueil',stats:'Chiffres',primes:'Primes',hornys:"Horny's & Tarifs",services:'Services',infos:'Infos service',fleet:'Flotte',team:'Équipe',avis:'Avis'};
+var SECTION_LABELS={hero:'Accueil',stats:'Chiffres',primes:'Primes',hornys:"Horny's & Tarifs",services:'Services',infos:'Infos service',fleet:'Flotte',team:'Équipe',planner:'Planning',avis:'Avis'};
 function setupScrollSpy(){
   var s=$$('[data-section]');
   var hud=$('#hudSection');
@@ -1230,8 +1341,9 @@ function setupFocusSync(){
             STATE.assignments=(d.assignments&&typeof d.assignments==='object')?d.assignments:STATE.assignments;
             STATE.history=Array.isArray(d.history)?d.history:STATE.history;
             STATE.baseOverrides=d.baseOverrides||STATE.baseOverrides;
+            STATE.planner=d.planner||STATE.planner;
             STATE.updatedAt=rt;applyBaseOverrides();LS.set('td-state',STATE);
-            renderAllPublic();
+            renderAllPublic();renderPlanner();
             toast('info','Données actualisées','Les dernières modifications ont été chargées.');
           }
         }
@@ -1284,20 +1396,21 @@ function init(){
           STATE.assignments=(d.assignments&&typeof d.assignments==='object')?d.assignments:{};
           STATE.history=Array.isArray(d.history)?d.history:[];
           STATE.baseOverrides=d.baseOverrides||{};
+          STATE.planner=d.planner||STATE.planner;
           STATE.updatedAt=rt||Date.now();
           applyBaseOverrides();LS.set('td-state',STATE);
           console.log('[TD] Données distantes chargées');
         }else{
           console.log('[TD] Local plus récent, upload...');
-          SYNC.save({invoices:STATE.invoices,employees:STATE.employees,vehicles:STATE.vehicles,assignments:STATE.assignments,history:STATE.history,baseOverrides:STATE.baseOverrides,updatedAt:STATE.updatedAt});
+          SYNC.save({invoices:STATE.invoices,employees:STATE.employees,vehicles:STATE.vehicles,assignments:STATE.assignments,history:STATE.history,baseOverrides:STATE.baseOverrides,planner:STATE.planner,updatedAt:STATE.updatedAt});
         }
       }
-      // File d'attente : essayer de vider
       if(hasPending()){setTimeout(function(){SYNC.flushPending();},3000);}
     }):Promise.resolve();
 
     _ready.then(function(){
       renderAllPublic();
+      renderPlanner();
       setupHero();
       var bar=$('#loaderBar'),pct=$('#loaderPct'),loader=$('#loader');
       var n=0;
@@ -1321,6 +1434,7 @@ function init(){
       setupKeyboardShortcuts();
       setupCountersV4();
       setupRating();
+      setupPlanner();
       setupFocusSync();
       setupOfflineBanner();
       console.log('[TD] ✅ Sync OK —',WORKER_CONFIGURED?'Worker actif':'Mode local');
