@@ -6,7 +6,6 @@
 <meta name="theme-color" content="#050506">
 <meta name="color-scheme" content="dark light">
 
-<!-- ═══ SEO ═══ -->
 <title>Taxi Downtown · Sensity RP — Compagnie de taxi à Los Santos</title>
 <meta name="description" content="Taxi Downtown, la compagnie de taxi de référence sur Sensity RP. Flotte premium, chauffeurs gradés, service 24/7 à Tangerine Street, Los Santos. Radio 17 Hz.">
 <meta name="keywords" content="Taxi, Downtown, Sensity RP, Los Santos, GTA RP, compagnie taxi, Tangerine Street">
@@ -14,7 +13,6 @@
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://taxi-sensity.vercel.app/">
 
-<!-- ═══ OPEN GRAPH ═══ -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Taxi Downtown">
 <meta property="og:title" content="Taxi Downtown · Sensity RP">
@@ -25,13 +23,11 @@
 <meta property="og:url" content="https://taxi-sensity.vercel.app/">
 <meta property="og:locale" content="fr_FR">
 
-<!-- ═══ TWITTER ═══ -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Taxi Downtown · Sensity RP">
 <meta name="twitter:description" content="La compagnie de taxi de référence sur Sensity RP.">
 <meta name="twitter:image" content="logo.png">
 
-<!-- ═══ PWA / MOBILE ═══ -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Taxi Downtown">
@@ -39,24 +35,19 @@
 <meta name="format-detection" content="telephone=no">
 <meta name="msapplication-TileColor" content="#a78bfa">
 
-<!-- ═══ ICONS ═══ -->
 <link rel="icon" href="logo.png" type="image/png">
 <link rel="apple-touch-icon" href="logo.png">
 <link rel="mask-icon" href="logo.png" color="#a78bfa">
 
-<!-- ═══ PERF : PRECONNECT / PRELOAD ═══ -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="dns-prefetch" href="https://api.jsonbin.io">
 <link rel="preload" as="image" href="logo.png">
 
-<!-- ═══ FONTS ═══ -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800&family=Permanent+Marker&display=swap">
 
-<!-- ═══ STYLES ═══ -->
 <link rel="stylesheet" href="style.css">
 
-<!-- ═══ JSON-LD : RICH SNIPPETS GOOGLE ═══ -->
 <script type="application/ld+json">
 {
   "@context":"https://schema.org",
@@ -65,26 +56,15 @@
   "description":"Compagnie de taxi de référence sur Sensity RP. Service 24/7 à Los Santos.",
   "image":"logo.png",
   "url":"https://taxi-sensity.vercel.app/",
-  "areaServed":{
-    "@type":"City",
-    "name":"Los Santos"
-  },
-  "address":{
-    "@type":"PostalAddress",
-    "streetAddress":"Tangerine Street",
-    "addressLocality":"Los Santos"
-  },
+  "areaServed":{"@type":"City","name":"Los Santos"},
+  "address":{"@type":"PostalAddress","streetAddress":"Tangerine Street","addressLocality":"Los Santos"},
   "openingHours":"Mo-Su 00:00-23:59",
   "availableLanguage":["fr"],
   "priceRange":"$",
-  "provider":{
-    "@type":"Organization",
-    "name":"Sensity RP"
-  }
+  "provider":{"@type":"Organization","name":"Sensity RP"}
 }
 </script>
 
-<!-- ═══ WATCHDOG LOADER ═══ -->
 <script>
 setTimeout(function(){
   var l = document.getElementById('loader');
@@ -98,7 +78,6 @@ setTimeout(function(){
 </head>
 <body class="is-loading">
 
-<!-- ═══ SKIP LINK (a11y clavier) ═══ -->
 <a class="skip-link" href="#main">Aller au contenu principal</a>
 
 <div class="scroll-progress" id="scrollProgress" aria-hidden="true"><i></i></div>
@@ -112,7 +91,7 @@ setTimeout(function(){
 <div class="aurora" aria-hidden="true"><i class="a1"></i><i class="a2"></i><i class="a3"></i></div>
 <div class="toast-stack" id="toastStack" aria-live="polite"></div>
 
-<!-- ═══ HEADER (CORRIGÉ) ═══ -->
+<!-- ═══ HEADER ═══ -->
 <header class="nav" role="banner">
   <a class="nav__logo" href="#top" data-scroll="top" aria-label="Retour à l'accueil de Taxi Downtown">
     <img src="logo.png" alt="Logo Taxi Downtown" width="52" height="52" loading="eager">
@@ -140,6 +119,7 @@ setTimeout(function(){
     <li><a href="#infos" data-scroll="infos"><small>06</small><span>Infos service</span></a></li>
     <li><a href="#fleet" data-scroll="fleet"><small>07</small><span>Flotte</span></a></li>
     <li><a href="#team" data-scroll="team"><small>08</small><span>Équipe</span></a></li>
+    <li><a href="#planner" data-scroll="planner"><small>08.5</small><span>Planning</span></a></li>
     <li><a href="#avis" data-scroll="avis"><small>09</small><span>Avis</span></a></li>
   </ul>
   <div class="menu__side">
@@ -416,6 +396,33 @@ setTimeout(function(){
   </div>
 </section>
 
+<!-- ═══ 08.5 · PLANNER ═══ -->
+<section class="s" id="planner" data-section="planner" aria-label="Planning hebdomadaire">
+  <div class="s__inner">
+    <div style="margin-bottom:52px;max-width:820px">
+      <p class="eyebrow"><i></i>Disponibilités de l'équipe</p>
+      <h2 class="display" style="font-size:clamp(44px,7vw,96px);margin:22px 0">Le <b>planning.</b></h2>
+      <p style="color:var(--ink-2);font-size:15px;line-height:1.75;max-width:640px">Planning hebdomadaire des disponibilités de service. Chaque employé dépose ses créneaux, la direction valide et le planning se met à jour automatiquement.</p>
+    </div>
+    <div class="planner">
+      <div class="planner__head">
+        <button class="planner__nav" id="plannerPrev" type="button" aria-label="Semaine précédente">‹</button>
+        <div class="planner__week" id="plannerWeek">—</div>
+        <button class="planner__nav" id="plannerNext" type="button" aria-label="Semaine suivante">›</button>
+      </div>
+      <div class="planner__cta">
+        <button type="button" class="btn btn--primary" id="btnDeposit">📝 Déposer mes disponibilités</button>
+        <span class="planner__hint" id="plannerCount"></span>
+      </div>
+      <div class="planner__wrap"><div class="planner__grid" id="plannerGrid" role="grid"></div></div>
+      <div class="planner__legend">
+        <span><i class="dot dot--on"></i> Disponible</span>
+        <span><i class="dot dot--off"></i> Aucune dispo</span>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ═══ 09 · AVIS ═══ -->
 <section class="s" id="avis" data-section="avis" aria-label="Avis clients">
   <div class="s__inner">
@@ -468,6 +475,7 @@ setTimeout(function(){
         <li><a href="#services" data-scroll="services">Services</a></li>
         <li><a href="#fleet" data-scroll="fleet">Flotte</a></li>
         <li><a href="#team" data-scroll="team">Équipe</a></li>
+        <li><a href="#planner" data-scroll="planner">Planning</a></li>
       </ul>
     </div>
     <div>
@@ -497,7 +505,6 @@ setTimeout(function(){
 <div id="modalRoot"></div>
 <input type="file" id="adminFileInput" accept=".json" hidden>
 
-<!-- ═══ NOSCRIPT FALLBACK ═══ -->
 <noscript>
   <div style="position:fixed;top:0;left:0;right:0;background:#e3121f;color:#fff;text-align:center;padding:10px;font-family:monospace;z-index:9999">
     JavaScript est désactivé. Certaines fonctionnalités peuvent ne pas fonctionner.
