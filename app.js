@@ -28,7 +28,7 @@ var LS={get:function(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(
 /* ═══ ÉTAT GLOBAL ═══ */
 var STATE=LS.get('td-state',null)||{
   invoices:[],employees:[],vehicles:[],
-  assignments:{'CW6683ZV':'Bob Musar','CJ8249YD':'Noah Dupont','BX5408WL':'Arthur Bendal','FD3839EL':'Maxime Rivière','YP7603HL':'Sacha Mermoud','LX4255HP':'Sofian Badhaoui','RM1393GV':'Filou Pepito','WN5307RY':'Jimy Smith','DIR0001':'Jimy Smith','JZ0498AE':'Sam Le Gros','DIR0002':'Sam Le Gros','DC3624SY':'Romeo Cali','DIR0003':'Romeo Cali'},
+  assignments:{'DC3624SY':'Romeo Cali','CJ8249YD':'Noah Dupont','BX5408WL':'Arthur Bendal','YP7603HL':'Sacha Mermoud'},
   history:[],baseOverrides:{},planner:{},plannerWeek:Date.now(),updatedAt:null
 };
 ['invoices','employees','vehicles','history'].forEach(function(k){if(!Array.isArray(STATE[k]))STATE[k]=[];});
@@ -107,18 +107,16 @@ function logAction(a,by){STATE.history.unshift({action:a,ts:Date.now(),by:by||'D
 
 /* ═══ DONNÉES DE BASE (modifie ici pour changer partout) ═══ */
 var BASE_EMPLOYEES=[
-  {id:'base-1',name:'Jimy Smith',role:'Directeur',hiredAt:Date.now()-30*86400000},
-  {id:'base-2',name:'Sam Le Gros',role:'Directeur Adjoint',hiredAt:Date.now()-30*86400000},
-  {id:'base-3',name:'Romeo Cali',role:'Responsable CM',hiredAt:Date.now()-30*86400000},
-  {id:'base-4',name:'Bob Musar',role:'Chauffeur Senior',hiredAt:Date.now()-15*86400000},
-  {id:'base-5',name:'Noah Dupont',role:'Novice',hiredAt:Date.now()-15*86400000},
-  {id:'base-7',name:'Maxime Rivière',role:'Novice',hiredAt:Date.now()-10*86400000},
-  {id:'base-8',name:'Sofia Fernandez',role:'Chauffeur Senior',hiredAt:Date.now()-25*86400000},
-  {id:'base-9',name:'Arthur Bendal',role:'Novice',hiredAt:Date.now()-8*86400000},
-  {id:'base-10',name:'Sacha Mermoud',role:'Novice',hiredAt:Date.now()-5*86400000},
-  {id:'base-11',name:'Theo Roberto',role:'Novice',hiredAt:Date.now()-5*86400000},
-  {id:'base-12',name:'Sofian Badhaoui',role:'Novice',hiredAt:Date.now()-3*86400000},
-  {id:'base-13',name:'Filou Pepito',role:'Chauffeur Confirmé',hiredAt:Date.now()-12*86400000}
+  {id:'base-1',name:'Romeo Cali',role:'Directeur',hiredAt:Date.now()-30*86400000},
+  {id:'base-2',name:'Arthur Bendal',role:'Chauffeur Confirmé',hiredAt:Date.now()-20*86400000},
+  {id:'base-3',name:'Sacha Mermoud',role:'Chauffeur Confirmé',hiredAt:Date.now()-18*86400000},
+  {id:'base-4',name:'Noah Dupont',role:'Chauffeur Confirmé',hiredAt:Date.now()-15*86400000},
+  {id:'base-5',name:'Alvaro Jhonson',role:'Chauffeur Confirmé',hiredAt:Date.now()-10*86400000},
+  {id:'base-6',name:'Enzo Killer',role:'Novice',hiredAt:Date.now()-5*86400000},
+  {id:'base-7',name:'Ocho Scarface',role:'Novice',hiredAt:Date.now()-5*86400000},
+  {id:'base-8',name:'Karim Ferrara',role:'Novice',hiredAt:Date.now()-5*86400000},
+  {id:'base-9',name:'Rosario Hernandez',role:'Novice',hiredAt:Date.now()-5*86400000},
+  {id:'base-10',name:'Walid Raya',role:'Novice',hiredAt:Date.now()-5*86400000}
 ];
 
 var BASE_FLEET=[
